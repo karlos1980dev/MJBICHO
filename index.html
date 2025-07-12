@@ -362,96 +362,76 @@ const db = firebase.database();
     }
 
     function enviarWhatsApp() {
-      const totalPagar = parseFloat(document.getElementById("totalPagar").textContent);
-      const totalReceber = parseFloat(document.getElementById("totalReceber").textContent);
-      const horarioSelecionado = document.getElementById("horarioInput").value;
-      const codigo = gerarCodigoAposta();
+  const totalPagar = parseFloat(document.getElementById("totalPagar").textContent);
+  const totalReceber = parseFloat(document.getElementById("totalReceber").textContent);
+  const horarioSelecionado = document.getElementById("horarioInput").value;
+  const codigo = gerarCodigoAposta();
 
-      if (totalPagar <= 0) {
-        abrirModal("Preencha pelo menos um valor válido para apostar.");
-        return;
-      }
-
-      function capturarValores(tipo) {
-        const arr = [];
-        const container = document.getElementById(tipo + "Container");
-        container.querySelectorAll("div").forEach(div => {
-          const num = div.querySelector("input").value.trim();
-          const pos = div.querySelector("select").value;
-          if (num) arr.push({ valor: num, posicao: pos });
-        });
-        return arr;
-      }
-
-      const milhar = capturarValores("milhar");
-      const centena = capturarValores("centena");
-      const dezena = capturarValores("dezena");
-      const grupo = capturarValores("grupo");
-
-      const duque = [];
-      const duqueInputs = document.querySelectorAll("#duqueContainer input");
-for (let i = 0; i < duqueInputs.length; i += 2) {
-  const val1 = duqueInputs[i].value.trim();
-  const val2 = duqueInputs[i + 1]?.value.trim();
-
-  if (val1 && val2) {
-    duque.push(`${val1} x ${val2}`);
+  if (totalPagar <= 0) {
+    abrirModal("Preencha pelo menos um valor válido para apostar.");
+    return;
   }
-}
-      const valorMilhar = parseFloat(document.getElementById("valorMilhar").value) || 0;
-      const valorCentena = parseFloat(document.getElementById("valorCentena").value) || 0;
-      const valorDezena = parseFloat(document.getElementById("valorDezena").value) || 0;
-      const valorGrupo = parseFloat(document.getElementById("valorGrupo").value) || 0;
-      const valorDuque = parseFloat(document.getElementById("valorDuque").value) || 0;
 
-      let resumo = `🎯 *APOSTA MULTIJOGO*\n`;
-      resumo += `🕒 Horário: ${horarioSelecionado}\n`;
-      resumo += `📌 Código: ${codigo}\n\n`;
+  function capturarValores(tipo) {
+    const arr = [];
+    const container = document.getElementById(tipo + "Container");
+    container.querySelectorAll("div").forEach(div => {
+      const num = div.querySelector("input").value.trim();
+      const pos = div.querySelector("select").value;
+      if (num) arr.push({ valor: num, posicao: pos });
+    });
+    return arr;
+  }
 
-      function resumoTipo(tipo, arr, valorUnit) {
-        arr.forEach(i => {
-          resumo += `• ${tipo.toUpperCase()}: ${i.valor} (${i.posicao}) - R$ ${valorUnit.toFixed(2)}\n`;
-        });
-      }
+  const milhar = capturarValores("milhar");
+  const centena = capturarValores("centena");
+  const dezena = capturarValores("dezena");
+  const grupo = capturarValores("grupo");
 
-      resumoTipo("milhar", milhar, valorMilhar);
-      resumoTipo("centena", centena, valorCentena);
-      resumoTipo("dezena", dezena, valorDezena);
-      resumoTipo("grupo", grupo, valorGrupo);
+  const duque = [];
+  const duqueInputs = document.querySelectorAll("#duqueContainer input");
+  for (let i = 0; i < duqueInputs.length; i += 2) {
+    const val1 = duqueInputs[i].value.trim();
+    const val2 = duqueInputs[i + 1]?.value.trim();
 
-      duque.forEach(d => {
-        resumo += `• DUQUE: ${d} - R$ ${valorDuque.toFixed(2)}\n`;
-      });
-
-      resumo += `\n💰 Total a pagar: R$ ${totalPagar.toFixed(2)}`;
-      resumo += `\n🏆 Possível retorno: R$ ${totalReceber.toFixed(2)}`;
-
-      // Salvar no Firebase
-      db.ref(`apostas/${codigo}`).set({
-        codigo,
-        horario: horarioSelecionado,
-        totalPagar,
-        totalReceber,
-        timestamp: Date.now(),
-
-        milhar,
-        centena,
-        dezena,
-        grupo,
-        duque,
-
-        valorMilhar,
-        valorCentena,
-        valorDezena,
-        valorGrupo,
-        valorDuque,
-      });
-
-      // Enviar WhatsApp
-      const numero = "71992290058";
-      const link = `https://wa.me/55${numero}?text=${encodeURIComponent(resumo)}`;
-      window.open(link, "_blank");
+    if (val1 && val2) {
+      duque.push(`${val1} x ${val2}`);
     }
+  }
+
+  const valorMilhar = parseFloat(document.getElementById("valorMilhar").value) || 0;
+  const valorCentena = parseFloat(document.getElementById("valorCentena").value) || 0;
+  const valorDezena = parseFloat(document.getElementById("valorDezena").value) || 0;
+  const valorGrupo = parseFloat(document.getElementById("valorGrupo").value) || 0;
+  const valorDuque = parseFloat(document.getElementById("valorDuque").value) || 0;
+
+  // Salvar no Firebase
+  db.ref(`apostas/${codigo}`).set({
+    codigo,
+    horario: horarioSelecionado,
+    totalPagar,
+    totalReceber,
+    timestamp: Date.now(),
+
+    milhar,
+    centena,
+    dezena,
+    grupo,
+    duque,
+
+    valorMilhar,
+    valorCentena,
+    valorDezena,
+    valorGrupo,
+    valorDuque,
+  });
+
+  // Enviar WhatsApp apenas com o código
+  const numero = "71992290058";
+  const mensagem = `📌 Código da aposta: *${codigo}*`;
+  const link = `https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`;
+  window.open(link, "_blank");
+}
 
     function bloquearHorariosPassados() {
       const agora = new Date();
