@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visualização de Aposta</title>
+  <style>
+    body {
+      background: #1f1c2c;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #2c2a3a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .resultado {
+      margin-top: 25px;
+      text-align: left;
+      background-color: #1e1c2c;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    h3 {
+      margin-top: 20px;
+      color: #25d366;
+    }
+    ul {
+      padding-left: 20px;
+      text-align: left;
+    }
+    li {
+      margin-bottom: 5px;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+      authDomain: "multijogo.firebaseapp.com",
+      databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+      projectId: "multijogo",
+      storageBucket: "multijogo.appspot.com",
+      messagingSenderId: "328198585423",
+      appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function getParametroUrl(nome) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(nome);
+    }
+
+    function exibirAposta(codigo) {
+      const resultadoDiv = document.getElementById('resultado');
+      resultadoDiv.innerHTML = '<p>🔄 Carregando aposta...</p>';
+
+      db.ref(`apostas/${codigo}`).once('value').then(snapshot => {
+        const dados = snapshot.val();
+        if (!dados) {
+          resultadoDiv.innerHTML = `<p>❌ Aposta não encontrada com o código: <strong>${codigo}</strong></p>`;
+          return;
+        }
+
+        let html = `<h3>🎯 Aposta ${dados.codigo || codigo}</h3>`;
+        html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
+        html += `<p><strong>💰 Total a Pagar:</strong> R$ ${dados.totalPagar?.toFixed(2) || '0.00'}</p>`;
+        html += `<p><strong>🏆 Possível Retorno:</strong> R$ ${dados.totalReceber?.toFixed(2) || '0.00'}</p>`;
+
+        function renderTipo(tipo, arr, valorUnit) {
+          if (!arr || arr.length === 0) return '';
+          let tipoHtml = `<h4>${tipo.toUpperCase()}</h4><ul>`;
+          arr.forEach(item => {
+            if (typeof item === "object") {
+              tipoHtml += `<li>${item.valor} (${item.posicao}) - R$ ${valorUnit?.toFixed(2) || '0.00'}</li>`;
+            } else {
+              tipoHtml += `<li>${item} - R$ ${valorUnit?.toFixed(2) || '0.00'}</li>`;
+            }
+          });
+          tipoHtml += `</ul>`;
+          return tipoHtml;
+        }
+
+        html += renderTipo("milhar", dados.milhar, dados.valorMilhar);
+        html += renderTipo("centena", dados.centena, dados.valorCentena);
+        html += renderTipo("dezena", dados.dezena, dados.valorDezena);
+        html += renderTipo("grupo", dados.grupo, dados.valorGrupo);
+        html += renderTipo("duque", dados.duque, dados.valorDuque);
+
+        resultadoDiv.innerHTML = html;
+      }).catch(err => {
+        document.getElementById('resultado').innerHTML = `<p>❌ Erro ao buscar aposta: ${err.message}</p>`;
+      });
+    }
+
+    window.onload = () => {
+      const codigo = getParametroUrl("codigo");
+      if (!codigo) {
+        document.body.innerHTML = '<h2>⚠️ Nenhum código informado na URL.<br>Use <code>?codigo=MJ-123</code></h2>';
+      } else {
+        exibirAposta(codigo);
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>📄 Detalhes da Aposta</h2>
+    <div id="resultado" class="resultado"></div>
+  </div>
+</body>
+</html>
