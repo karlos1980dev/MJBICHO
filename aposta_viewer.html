@@ -1,526 +1,116 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Multijogo EA - Apostas Futebol</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visualizar Aposta</title>
   <style>
-    /* Reset básico */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
     body {
-      background: linear-gradient(135deg, #1f1c2c, #928dab);
-      color: #f0f0f5;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background: #1f1c2c;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
       padding: 20px;
+      text-align: center;
     }
-
     .container {
+      max-width: 600px;
+      margin: auto;
       background-color: #2c2a3a;
-      padding: 30px 40px;
+      padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-      max-width: 480px;
-      width: 100%;
-      text-align: center;
-      transition: transform 0.3s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
-    .container:hover {
-      transform: translateY(-5px);
-    }
-
-    h2 {
-      font-weight: 700;
-      margin-bottom: 25px;
-      color: #fff;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      text-shadow: 0 0 5px #25d366;
-    }
-
-    .valoresInput, select {
-      width: 100%;
-      padding: 12px 15px;
-        text-align:center
-      margin: 8px 0 20px;
-      border: 2px solid #444358;
-      border-radius: 8px;
-      background-color: #3a3950;
-      color: #eee;
-      font-size: 1rem;
-      transition: border-color 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .valoresInput::placeholder {
-      color: #aaaabb;
-    }
-
-    .valoresInput:focus, select:focus {
-      outline: none;
-      border-color: #25d366;
-      box-shadow: 0 0 8px #25d366;
-      background-color: #2a2a3d;
-      color: #fff;
-    }
-
-    button {
-      background-color: #25d366;
-      border: none;
-      padding: 14px 0;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: #fff;
-      cursor: pointer;
-      box-shadow: 0 5px 12px rgba(37,211,102,0.6);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      width: 100%;
-      margin-top: 10px;
-      user-select: none;
-    }
-
-    button:hover {
-      background-color: #1e9e58;
-      box-shadow: 0 8px 18px rgba(30,158,88,0.8);
-    }
-
-    button:disabled, button[disabled] {
-      background-color: #555666;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    #milharContainer > div,
-    #centenaContainer > div,
-    #dezenaContainer > div,
-    #grupoContainer > div {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    #milharContainer input,
-    #centenaContainer input,
-    #dezenaContainer input,
-    #grupoContainer input {
-      flex: 2;
-        text-align:center
-    }
-
-    #milharContainer select,
-    #centenaContainer select,
-    #dezenaContainer select,
-    #grupoContainer select {
-      flex: 1.2;
-      cursor: pointer;
-      text-align:center;
-    }
-    /* Total Pagar / Receber */
     .resultado {
-      margin-top: 20px;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #ddd;
-      line-height: 1.6;
-      user-select: none;
-    }
-
-    /* Modal Erro */
-    #modalErro {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right:0; bottom: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 10000;
-      justify-content: center;
-      align-items: center;
-      padding: 15px;
-    }
-
-    #modalErro > div {
+      margin-top: 25px;
+      text-align: left;
       background-color: #1e1c2c;
-      color: #eee;
-      padding: 25px 30px;
-      border-radius: 12px;
-      max-width: 320px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
-      position: relative;
+      padding: 20px;
+      border-radius: 10px;
     }
-
-    #modalErro h3 {
-      margin-bottom: 18px;
-      font-weight: 800;
-      color: #ff4c4c;
-      text-shadow: 0 0 6px #ff4c4c;
+    h3 {
+      color: #25d366;
     }
-
-    #modalErro button {
-      width: 100%;
-      padding: 12px 0;
-      margin-top: 15px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 1rem;
-      user-select: none;
-      border: none;
-      cursor: pointer;
-      background-color: #ff4c4c;
-      color: white;
-      box-shadow: 0 5px 12px rgba(255,76,76,0.7);
+    ul {
+      padding-left: 20px;
     }
-    #modalErro button:hover {
-      background-color: #cc3b3b;
+    li {
+      margin-bottom: 5px;
     }
-
-    #modalErro span {
-      position: absolute;
-      top: 10px;
-      right: 14px;
-      font-size: 22px;
-      font-weight: 900;
-      cursor: pointer;
-      color: #ff4c4c;
-      user-select: none;
-      transition: color 0.2s ease;
-    }
-    #modalErro span:hover {
-      color: #ff0000;
-    }
-
-    /* Responsividade */
-    @media(max-width: 520px) {
-      .container {
-        padding: 25px 20px;
-      }
-      h2 {
-        font-size: 1.6rem;
-      }
-      .resultado {
-        font-size: 1rem;
-      }
-      button, input, select {
-        font-size: 1rem;
-      }
-    }
-    input, select, button {
-      padding: 10px; margin: 2px 0; width:90%; border-radius: 4px; border: 1px solid #ccc;
-    }
-    input.numero { width: 100%; box-sizing: border-box; }
   </style>
 
   <!-- Firebase -->
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-  apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
-  authDomain: "multijogo.firebaseapp.com",
-  databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
-  projectId: "multijogo",
-  storageBucket: "multijogo.firebasestorage.app",
-  messagingSenderId: "328198585423",
-  appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-    const valoresPremio = {
-      milhar: 5000, centena: 600, dezena: 70, grupo: 16, duque: 150
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+      authDomain: "multijogo.firebaseapp.com",
+      databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+      projectId: "multijogo",
+      storageBucket: "multijogo.appspot.com",
+      messagingSenderId: "328198585423",
+      appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    function adicionarCampos(tipo, qtd) {
-  const container = document.getElementById(tipo + "Container");
-  for (let i = 0; i < qtd; i++) {
-    const div = document.createElement("div");
-    const input = document.createElement("input");
-    input.type = "number";
-    input.placeholder = tipo;
-
-    if (tipo === "milhar") {
-      input.maxLength = 4;
-      input.oninput = () => { input.value = input.value.slice(0, 4); calcularTotal(); };
-    } else if (tipo === "centena") {
-      input.maxLength = 3;
-      input.oninput = () => { input.value = input.value.slice(0, 3); calcularTotal(); };
-    } else if (tipo === "dezena") {
-      input.maxLength = 2;
-      input.oninput = () => { input.value = input.value.slice(0, 2); calcularTotal(); };
-    } else if (tipo === "grupo") {
-      input.maxLength = 2;
-      input.oninput = () => {
-        input.value = input.value.slice(0, 2);
-        if (parseInt(input.value) > 25) input.value = "25";
-        calcularTotal();
-      };
-    } else {
-      input.oninput = calcularTotal;
-    }
-
-    const select = document.createElement("select");
-    ["1", "5", "10"].forEach(v => {
-      const option = document.createElement("option");
-      option.value = v;
-      option.textContent = `1º ao ${v}º`;
-      select.appendChild(option);
-    });
-
-    select.onchange = calcularTotal;
-
-    div.appendChild(input);
-    div.appendChild(select);
-    container.appendChild(div);
-  }
-}
-    function adicionarCamposDuque() {
-  const container = document.getElementById("duqueContainer");
-  for (let i = 0; i < 1; i++) {
-    const div = document.createElement("div");
-    const input1 = document.createElement("input");
-    const input2 = document.createElement("input");
-
-    input1.type = "number";
-    input1.placeholder = "Ex: 22";
-    input1.maxLength = 2;
-    input1.style.width = "35%";
-    input1.oninput = () => {
-      input1.value = input1.value.slice(0, 2);
-      calcularTotal();
-    };
-
-    input2.type = "number";
-    input2.placeholder = "Ex: 44";
-    input2.maxLength = 2;
-    input2.style.width = "30%";
-    input2.oninput = () => {
-      input2.value = input2.value.slice(0, 2);
-      calcularTotal();
-    };
-
-    div.appendChild(input1);
-    div.appendChild(document.createTextNode(" x "));
-    div.appendChild(input2);
-    container.appendChild(div);
-  }
-}
-    function calcularTotal() {
-      let totalPagar = 0;
-      let totalReceber = 0;
-
-      function somaTipo(tipo, premio, valorId) {
-        const valorUnit = parseFloat(document.getElementById(valorId).value) || 0;
-        const container = document.getElementById(tipo + "Container");
-        if (!container) return;
-
-        container.querySelectorAll("div").forEach(grupo => {
-          const input = grupo.querySelector("input");
-          if (input && input.value.trim() !== "") {
-            totalPagar += valorUnit;
-            totalReceber += premio * valorUnit;
-          }
-        });
-      }
-
-      somaTipo("milhar", valoresPremio.milhar, "valorMilhar");
-      somaTipo("centena", valoresPremio.centena, "valorCentena");
-      somaTipo("dezena", valoresPremio.dezena, "valorDezena");
-      somaTipo("grupo", valoresPremio.grupo, "valorGrupo");
-
-      const valorDuque = parseFloat(document.getElementById("valorDuque").value) || 0;
-      document.getElementById("duqueContainer").querySelectorAll("input").forEach(input => {
-        if (input.value.trim() !== "") {
-          totalPagar += valorDuque;
-          totalReceber += valoresPremio.duque * valorDuque;
-        }
-      });
-
-      document.getElementById("totalPagar").textContent = totalPagar.toFixed(2);
-      document.getElementById("totalReceber").textContent = totalReceber.toFixed(2);
-    }
-
-    function abrirModal(msg) {
-      document.getElementById("mensagemModal").innerText = msg;
-      document.getElementById("modalErro").style.display = "flex";
-    }
-
-    function fecharModal() {
-      document.getElementById("modalErro").style.display = "none";
-    }
-
-    function gerarCodigoAposta() {
-      return `MJ-${Date.now()}`;
-    }
-
-    function enviarWhatsApp() {
-  const totalPagar = parseFloat(document.getElementById("totalPagar").textContent);
-  const totalReceber = parseFloat(document.getElementById("totalReceber").textContent);
-  const horarioSelecionado = document.getElementById("horarioInput").value;
-  const codigo = gerarCodigoAposta();
-
-  if (totalPagar <= 0) {
-    abrirModal("Preencha pelo menos um valor válido para apostar.");
-    return;
-  }
-
-  function capturarValores(tipo) {
-    const arr = [];
-    const container = document.getElementById(tipo + "Container");
-    container.querySelectorAll("div").forEach(div => {
-      const num = div.querySelector("input").value.trim();
-      const pos = div.querySelector("select").value;
-      if (num) arr.push({ valor: num, posicao: pos });
-    });
-    return arr;
-  }
-
-  const milhar = capturarValores("milhar");
-  const centena = capturarValores("centena");
-  const dezena = capturarValores("dezena");
-  const grupo = capturarValores("grupo");
-
-  const duque = [];
-  const duqueInputs = document.querySelectorAll("#duqueContainer input");
-  for (let i = 0; i < duqueInputs.length; i += 2) {
-    const val1 = duqueInputs[i].value.trim();
-    const val2 = duqueInputs[i + 1]?.value.trim();
-
-    if (val1 && val2) {
-      duque.push(`${val1} x ${val2}`);
-    }
-  }
-
-  const valorMilhar = parseFloat(document.getElementById("valorMilhar").value) || 0;
-  const valorCentena = parseFloat(document.getElementById("valorCentena").value) || 0;
-  const valorDezena = parseFloat(document.getElementById("valorDezena").value) || 0;
-  const valorGrupo = parseFloat(document.getElementById("valorGrupo").value) || 0;
-  const valorDuque = parseFloat(document.getElementById("valorDuque").value) || 0;
-
-  // Salvar no Firebase
-  db.ref(`apostas/${codigo}`).set({
-    codigo,
-    horario: horarioSelecionado,
-    totalPagar,
-    totalReceber,
-    timestamp: Date.now(),
-
-    milhar,
-    centena,
-    dezena,
-    grupo,
-    duque,
-
-    valorMilhar,
-    valorCentena,
-    valorDezena,
-    valorGrupo,
-    valorDuque,
-  });
-
-  // Enviar WhatsApp apenas com o código
-  const numero = "71992290058";
-  const mensagem = `📌 Código da aposta: *${codigo}*`;
-  const link = `https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`;
-  window.open(link, "_blank");
-}
-
-    function bloquearHorariosPassados() {
-      const agora = new Date();
-      const horaAtual = agora.getHours();
-      const select = document.getElementById("horarioInput");
-
-      let primeiroDisponivel = null;
-
-      Array.from(select.options).forEach(option => {
-        const hora = parseInt(option.value.split(":")[0]);
-        if (hora <= horaAtual) {
-          option.disabled = true;
-          option.textContent += " (indisponível)";
-        } else if (!primeiroDisponivel) {
-          primeiroDisponivel = option.value;
-        }
-      });
-
-      if (primeiroDisponivel) {
-        select.value = primeiroDisponivel;
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search);
+      const codigo = params.get("codigo");
+      if (codigo) {
+        buscarApostaPorCodigo(codigo);
       } else {
-        select.value = "";
+        document.getElementById("resultado").innerHTML = "<p style='color:red'>Código da aposta não informado na URL.</p>";
       }
-    }
-
-    window.onload = () => {
-      adicionarCampos('milhar', 3);
-      adicionarCampos('centena', 3);
-      adicionarCampos('dezena', 3);
-      adicionarCampos('grupo', 3);
-      adicionarCamposDuque();
-      calcularTotal();
-      bloquearHorariosPassados();
     };
+
+    function buscarApostaPorCodigo(codigo) {
+      const resultadoDiv = document.getElementById('resultado');
+      resultadoDiv.innerHTML = "<p>🔄 Buscando aposta...</p>";
+
+      db.ref(`apostas/${codigo}`).once('value').then(snapshot => {
+        const dados = snapshot.val();
+        if (!dados) {
+          resultadoDiv.innerHTML = `<p>❌ Aposta não encontrada para o código: <strong>${codigo}</strong></p>`;
+          return;
+        }
+
+        let html = `<h3>🎯 Aposta ${codigo}</h3>`;
+        html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
+        html += `<p><strong>💰 Total a Pagar:</strong> R$ ${Number(dados.totalPagar).toFixed(2)}</p>`;
+        html += `<p><strong>🏆 Possível Retorno:</strong> R$ ${Number(dados.totalReceber).toFixed(2)}</p>`;
+
+        function renderTipo(tipo, arr, valorUnit) {
+          if (!arr || arr.length === 0) return '';
+          let tipoHtml = `<h4>${tipo.toUpperCase()}</h4><ul>`;
+          arr.forEach(item => {
+            if (typeof item === "object") {
+              tipoHtml += `<li>${item.valor} (${item.posicao}) - R$ ${valorUnit.toFixed(2)}</li>`;
+            } else {
+              tipoHtml += `<li>${item} - R$ ${valorUnit.toFixed(2)}</li>`;
+            }
+          });
+          tipoHtml += `</ul>`;
+          return tipoHtml;
+        }
+
+        html += renderTipo("milhar", dados.milhar, dados.valorMilhar);
+        html += renderTipo("centena", dados.centena, dados.valorCentena);
+        html += renderTipo("dezena", dados.dezena, dados.valorDezena);
+        html += renderTipo("grupo", dados.grupo, dados.valorGrupo);
+        html += renderTipo("duque", dados.duque, dados.valorDuque);
+
+        resultadoDiv.innerHTML = html;
+      }).catch(err => {
+        resultadoDiv.innerHTML = `<p>Erro ao buscar aposta: ${err.message}</p>`;
+      });
+    }
   </script>
 </head>
 <body>
   <div class="container">
-    <h2>Multijogo</h2>
-
-    <select id="horarioInput" class="valoresInput" title="Selecione o horário da aposta">
-      <option value="10:00">10:00</option>
-      <option value="12:00">12:00</option>
-      <option value="15:00">15:00</option>
-      <option value="19:00">19:00</option>
-      <option value="21:00">21:00</option>
-    </select>
-
-    <!-- MILHAR -->
-    <input type="number" id="valorMilhar" class="valoresInput" placeholder="Valor da milhar" step="0.01" oninput="calcularTotal()" />
-    <div id="milharContainer"></div>
-    <button type="button" onclick="adicionarCampos('milhar', 1)">+ Adicionar milhar</button>
-
-    <!-- CENTENA -->
-    <input type="number" id="valorCentena" class="valoresInput" placeholder="Valor da centena" step="0.01" oninput="calcularTotal()" />
-    <div id="centenaContainer"></div>
-    <button type="button" onclick="adicionarCampos('centena', 1)">+ Adicionar centena</button>
-
-    <!-- DEZENA -->
-    <input type="number" id="valorDezena" class="valoresInput" placeholder="Valor da dezena" step="0.01" oninput="calcularTotal()" />
-    <div id="dezenaContainer"></div>
-    <button type="button" onclick="adicionarCampos('dezena', 1)">+ Adicionar dezena</button>
-
-    <!-- GRUPO -->
-    <input type="number" id="valorGrupo" class="valoresInput" placeholder="Valor do grupo" step="0.01" oninput="calcularTotal()" />
-    <div id="grupoContainer"></div>
-    <button type="button" onclick="adicionarCampos('grupo', 1)">+ Adicionar grupo</button>
-
-    <!-- DUQUE -->
-    <input type="number" id="valorDuque" class="valoresInput" placeholder="Valor do duque" step="0.01" oninput="calcularTotal()" />
-    <div id="duqueContainer"></div>
-    <button type="button" onclick="adicionarCamposDuque()">+ Adicionar duque</button>
-
-<div class="resultado">
-      Total a Pagar: R$ <span id="totalPagar">0.00</span><br />
-      Total a Receber: R$ <span id="totalReceber">0.00</span>
-    </div>
-
-    <button onclick="enviarWhatsApp()">VALIDAR PULE</button>
-  </div>
-
-  <!-- Modal Erro -->
-  <div id="modalErro">
-    <div>
-      <span onclick="fecharModal()">✖</span>
-      <h3>Erro</h3>
-      <p id="mensagemModal"></p>
-      <button onclick="fecharModal()">OK</button>
-    </div>
+    <h2>📄 Detalhes da Aposta</h2>
+    <div id="resultado" class="resultado"></div>
   </div>
 </body>
 </html>
