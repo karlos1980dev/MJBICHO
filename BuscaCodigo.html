@@ -219,13 +219,13 @@ function enviarWhatsApp(codigo) {
     }
 
     function compartilharLink(codigo) {
-      const link = `${location.origin}${location.pathname}?codigo=${codigo}`;
-      navigator.clipboard.writeText(link).then(() => {
-        abrirModal("🔗 Link copiado!");
-      }).catch(() => {
-        abrirModal("Erro ao copiar link.");
-      });
-    }
+  const link = `${location.origin}/MJBICHO/aposta_viewer.html?codigo=${codigo}`;
+  navigator.clipboard.writeText(link).then(() => {
+    abrirModal("🔗 Link copiado!");
+  }).catch(() => {
+    abrirModal("Erro ao copiar link.");
+  });
+}
     function copiarResumo(codigo) {
       db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
         const dados = snapshot.val();
