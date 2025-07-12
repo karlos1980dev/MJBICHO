@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Buscar Aposta</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: #2c2a3a;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      color: #25d366;
+      text-shadow: 0 0 5px #25d366;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 1rem;
+    }
+
+    input {
+      background-color: #444358;
+      color: #fff;
+    }
+
+    button {
+      background-color: #25d366;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1e9e58;
+    }
+
+    .resultado {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    ul {
+      margin-left: 20px;
+      padding-left: 0;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    .copiar {
+      margin-top: 15px;
+      background: #00bfa5;
+    }
+
+    /* Modal simples */
+    #modalMensagem {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #modalMensagem div {
+      background: #2a2a3d;
+      padding: 25px 30px;
+      border-radius: 10px;
+      text-align: center;
+      color: #fff;
+      max-width: 320px;
+      word-break: break-word;
+    }
+  </style>
+
+  <!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+  authDomain: "multijogo.firebaseapp.com",
+  databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+  projectId: "multijogo",
+  storageBucket: "multijogo.firebasestorage.app",
+  messagingSenderId: "328198585423",
+  appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+    function abrirModal(msg) {
+      const modal = document.getElementById("modalMensagem");
+      const mensagem = document.getElementById("mensagemModal");
+      mensagem.textContent = msg;
+      modal.style.display = "flex";
+      setTimeout(() => modal.style.display = "none", 2500);
+    }
+
+    function buscarAposta() {
+      const codigo = document.getElementById("codigoBusca").value.trim();
+      const resultado = document.getElementById("resultadoBusca");
+
+      if (!codigo) {
+        abrirModal("Digite o código da aposta.");
+        return;
+      }
+
+      db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
+        const dados = snapshot.val();
+
+        if (!dados) {
+          resultado.innerHTML = `<p style="color:red;">❌ Aposta não encontrada.</p>`;
+          return;
+        }
+
+        let html = '';
+
+        // Exibe dados básicos (verifica se existem)
+        if (dados.nome) html += `<p><strong>👤 Jogador:</strong> ${dados.nome}</p>`;
+        if (dados.horario) html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
+        if (dados.valorPago !== undefined) html += `<p><strong>💰 Valor Pago:</strong> R$ ${Number(dados.valorPago).toFixed(2)}</p>`;
+        if (dados.totalPagar !== undefined) html += `<p><strong>📤 Apostado:</strong> R$ ${Number(dados.totalPagar).toFixed(2)}</p>`;
+        if (dados.totalReceber !== undefined) html += `<p><strong>🎁 A Receber:</strong> R$ ${Number(dados.totalReceber).toFixed(2)}</p>`;
+
+        function listar(titulo, arr, formatador) {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) return "";
+          let bloco = `<p><strong>${titulo}:</strong></p><ul>`;
+          arr.forEach(item => bloco += `<li>${formatador(item)}</li>`);
+          bloco += `</ul>`;
+          return bloco;
+        }
+
+        html += listar("🐎 Milhar", dados.milhar, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        html += listar("🎯 Centena", dados.centena, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        html += listar("🔢 Dezena", dados.dezena, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        html += listar("🐘 Grupo", dados.grupo, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        // Duque pode ser array simples ou objetos, ajusta aqui:
+        if(Array.isArray(dados.duque)){
+          if(typeof dados.duque[0] === 'string'){
+            html += listar("💥 Duque", dados.duque, i => i);
+          } else {
+            html += listar("💥 Duque", dados.duque, i => `${i.valor} (1º ao ${i.posicao}º)`);
+          }
+        }
+
+        html += `
+          <button class="copiar" onclick="copiarResumo('${codigo}')">📋 Copiar Resumo</button>
+          <button class="copiar" onclick="enviarWhatsApp('${codigo}')">📤 Enviar via WhatsApp</button>
+          <button class="copiar" onclick="compartilharLink('${codigo}')">🔗 Compartilhar Link</button>`;
+
+        resultado.innerHTML = html;
+      }).catch(err => {
+        abrirModal("Erro ao buscar dados.");
+        console.error(err);
+      });
+    }
+function enviarWhatsApp(codigo) {
+      db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
+        const dados = snapshot.val();
+        if (!dados) return abrirModal("Aposta não encontrada.");
+
+        let texto = `🎯 MULTIJOGO - APOSTA\n\n`;
+        texto += dados.nome ? `👤 Jogador: ${dados.nome}\n` : "";
+        texto += dados.horario ? `🕒 Horário: ${dados.horario}\n` : "";
+        texto += `📄 Código: ${codigo}\n\n`;
+
+        function listar(tipo, arr, formatter) {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) return "";
+          let str = `${tipo}:\n`;
+          arr.forEach(i => str += `- ${formatter(i)}\n`);
+          return str + "\n";
+        }
+
+        texto += listar("🐎 Milhar", dados.milhar, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += listar("🎯 Centena", dados.centena, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += listar("🔢 Dezena", dados.dezena, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += listar("🐘 Grupo", dados.grupo, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += listar("💥 Duque", dados.duque, i => typeof i === 'string' ? i : `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += dados.totalPagar !== undefined ? `✅ Total Apostado: R$ ${Number(dados.totalPagar).toFixed(2)}\n` : "";
+        texto += dados.totalReceber !== undefined ? `🎁 A Receber: R$ ${Number(dados.totalReceber).toFixed(2)}\n` : "";
+
+        const numero = "55SEUNUMERO"; // substitua por ex: "5571992290058"
+        const link = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+        window.open(link, "_blank");
+      });
+    }
+
+    function compartilharLink(codigo) {
+      const link = `${location.origin}${location.pathname}?codigo=${codigo}`;
+      navigator.clipboard.writeText(link).then(() => {
+        abrirModal("🔗 Link copiado!");
+      }).catch(() => {
+        abrirModal("Erro ao copiar link.");
+      });
+    }
+    function copiarResumo(codigo) {
+      db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
+        const dados = snapshot.val();
+        if (!dados) return abrirModal("Dados não encontrados para copiar.");
+
+        let texto = `🎯 MULTIJOGO - APOSTA\n\n`;
+        texto += dados.nome ? `👤 Jogador: ${dados.nome}\n` : "";
+        texto += dados.horario ? `🕒 Horário: ${dados.horario}\n` : "";
+        texto += dados.valorPago !== undefined ? `💰 Pago: R$ ${Number(dados.valorPago).toFixed(2)}\n` : "";
+        texto += `📄 Código: ${codigo}\n\n`;
+
+        function listar(tipo, arr, formatter) {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) return "";
+          let str = `${tipo}:\n`;
+          arr.forEach(i => str += `- ${formatter(i)}\n`);
+          return str + "\n";
+        }
+
+        texto += listar("🐎 Milhar", dados.milhar, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += listar("🎯 Centena", dados.centena, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += listar("🔢 Dezena", dados.dezena, i => `${i.valor} (1º ao ${i.posicao}º)`);
+        texto += listar("🐘 Grupo", dados.grupo, i => `${i.valor} (1º ao ${i.posicao}º)`);
+
+        if(Array.isArray(dados.duque)){
+          if(typeof dados.duque[0] === 'string'){
+            texto += listar("💥 Duque", dados.duque, i => i);
+          } else {
+            texto += listar("💥 Duque", dados.duque, i => `${i.valor} (1º ao ${i.posicao}º)`);
+          }
+        }
+
+        texto += dados.totalPagar !== undefined ? `✅ Total Apostado: R$ ${Number(dados.totalPagar).toFixed(2)}\n` : "";
+        texto += dados.totalReceber !== undefined ? `🎁 A Receber: R$ ${Number(dados.totalReceber).toFixed(2)}\n` : "";
+
+        navigator.clipboard.writeText(texto).then(() => {
+          abrirModal("Resumo copiado com sucesso!");
+        }).catch(() => {
+          abrirModal("Erro ao copiar.");
+        });
+      });
+    }
+    
+    window.onload = () => {
+  const params = new URLSearchParams(window.location.search);
+  const cod = params.get("codigo");
+  if (cod) {
+    document.getElementById("codigoBusca").value = cod;
+    buscarAposta();
+  }
+};
+  </script>
+</body>
+<body>
+  <div class="container">
+    <h2>Buscar Aposta</h2>
+    <input id="codigoBusca" placeholder="Digite o código da aposta" autocomplete="off" />
+    <button onclick="buscarAposta()">Buscar</button>
+
+    <div id="resultadoBusca" class="resultado"></div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalMensagem">
+    <div id="mensagemModal"></div>
+  </div>
+  
+</body>
+</html>
