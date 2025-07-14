@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Buscar Aposta</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1f1f2e;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      width: 80%;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+    button {
+      padding: 12px 20px;
+      background: #25d366;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #1fa455; }
+
+    .extra-buttons {
+      margin-top: 15px;
+      display: none;
+    }
+
+    pre {
+      background: #2c2a3a;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .modal div {
+      background: #333;
+      padding: 20px;
+      border-radius: 10px;
+      color: white;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+      authDomain: "multijogo.firebaseapp.com",
+      databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+      projectId: "multijogo",
+      storageBucket: "multijogo.appspot.com",
+      messagingSenderId: "328198585423",
+      appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let codigoAtual = ""; // será usado para os botões
+
+    function abrirModal(msg) {
+      const modal = document.getElementById("modalMensagem");
+      const mensagem = document.getElementById("mensagemModal");
+      mensagem.textContent = msg;
+      modal.style.display = "flex";
+      setTimeout(() => modal.style.display = "none", 2500);
+    }
+
+    function buscarAposta() {
+      const codigo = document.getElementById("codigoInput").value.trim();
+      const resultado = document.getElementById("resultado");
+      const botoes = document.getElementById("botoesCompartilhar");
+
+      if (!codigo) {
+        abrirModal("Digite o código da aposta.");
+        return;
+      }
+
+      db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
+        const dados = snapshot.val();
+
+        if (!dados) {
+          resultado.innerHTML = `❌ Aposta não encontrada para o código: ${codigo}`;
+          botoes.style.display = "none";
+          return;
+        }
+
+        codigoAtual = codigo;
+        botoes.style.display = "block";
+
+        let texto = `📄 Código: ${codigo}\n`;
+        texto += dados.horario ? `🕒 Horário: ${dados.horario}\n` : "";
+        texto += dados.valorUnico ? `💵 Valor: R$ ${dados.valorUnico.toFixed(2)}\n` : "";
+        texto += `\n`;
+
+        const resumo = dados.resumoFormatado || {};
+
+        for (const tipo in resumo) {
+          const numeros = resumo[tipo];
+          texto += `🔹 ${tipo}:\n${numeros.join(" - ")}\n\n`;
+        }
+
+        resultado.textContent = texto;
+      });
+    }
+
+    function compartilharWhatsApp() {
+      if (!codigoAtual) return;
+      const link = `https://wa.me/5571992290058?text=Consultei a aposta código: ${codigoAtual}%0Ahttps://seusite.com/buscar.html?codigo=${codigoAtual}`;
+      window.open(link, "_blank");
+    }
+
+    function compartilharLink() {
+      if (!codigoAtual) return;
+      const link = `${window.location.origin}/buscar.html?codigo=${codigoAtual}`;
+      navigator.clipboard.writeText(link).then(() => {
+        abrirModal("🔗 Link copiado para área de transferência!");
+      }).catch(() => {
+        abrirModal("Erro ao copiar link.");
+      });
+    }
+
+    window.onload = () => {
+      const params = new URLSearchParams(window.location.search);
+      const cod = params.get("codigo");
+      if (cod) {
+        document.getElementById("codigoInput").value = cod;
+        buscarAposta();
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <h2>🔍 Buscar Aposta</h2>
+  <input id="codigoInput" type="text" placeholder="Digite o código (ex: MJ-1752...)" />
+  <br>
+  <button onclick="buscarAposta()">Buscar</button>
+
+  <div id="botoesCompartilhar" class="extra-buttons">
+    <button onclick="compartilharWhatsApp()">📤 WhatsApp</button>
+    <button onclick="compartilharLink()">🔗 Copiar Link</button>
+  </div>
+
+  <pre id="resultado">🕵️ Digite o código acima para ver os detalhes.</pre>
+
+  <div id="modalMensagem" class="modal">
+    <div>
+      <p id="mensagemModal"></p>
+    </div>
+  </div>
+</body>
+</html>
