@@ -135,7 +135,7 @@
 
     function compartilharLink() {
       if (!codigoAtual) return;
-      const link = `${window.location.origin}/buscar.html?codigo=${codigoAtual}`;
+      const link = `${window.location.origin}/aposta_viewerK.html?codigo=${codigoAtual}`;
       navigator.clipboard.writeText(link).then(() => {
         abrirModal("🔗 Link copiado para área de transferência!");
       }).catch(() => {
