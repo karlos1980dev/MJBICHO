@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visualizar Aposta</title>
+  <style>
+    body {
+      background: #1f1c2c;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #2c2a3a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .resultado {
+      margin-top: 25px;
+      text-align: left;
+      background-color: #1e1c2c;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    h3 {
+      color: #25d366;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 5px;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+      authDomain: "multijogo.firebaseapp.com",
+      databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+      projectId: "multijogo",
+      storageBucket: "multijogo.appspot.com",
+      messagingSenderId: "328198585423",
+      appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search);
+      const codigo = params.get("codigo");
+      if (codigo) {
+        buscarApostaPorCodigo(codigo);
+      } else {
+        document.getElementById("resultado").innerHTML = "<p style='color:red'>❗ Código da aposta não informado na URL.</p>";
+      }
+    };
+
+    function buscarApostaPorCodigo(codigo) {
+      const resultadoDiv = document.getElementById('resultado');
+      resultadoDiv.innerHTML = "<p>🔄 Buscando aposta...</p>";
+
+      db.ref(`apostas/${codigo}`).once('value').then(snapshot => {
+        const dados = snapshot.val();
+        if (!dados) {
+          resultadoDiv.innerHTML = `<p>❌ Aposta não encontrada para o código: <strong>${codigo}</strong></p>`;
+          return;
+        }
+
+        let html = `<h3>🎯 Aposta ${codigo}</h3>`;
+        html += dados.horario ? `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>` : "";
+        html += dados.totalPagar !== undefined ? `<p><strong>💰 Total a Pagar:</strong> R$ ${Number(dados.totalPagar).toFixed(2)}</p>` : "";
+        html += dados.totalReceber !== undefined ? `<p><strong>🏆 Possível Retorno:</strong> R$ ${Number(dados.totalReceber).toFixed(2)}</p>` : "";
+
+        function renderTipo(titulo, arr) {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) return '';
+          let tipoHtml = `<h4>${titulo}</h4><ul>`;
+          arr.forEach(item => {
+            if (typeof item === "object") {
+              const numero = item.numero || item.numeros || "N/A";
+              const valor = item.valor ? `R$ ${Number(item.valor).toFixed(2)}` : "";
+              const posicao = item.posicao ? `(${item.posicao})` : "";
+              const receber = item.receber ? `→ Receber R$ ${Number(item.receber).toFixed(2)}` : "";
+              tipoHtml += `<li>${numero} ${valor} ${posicao} ${receber}</li>`;
+            } else {
+              tipoHtml += `<li>${item}</li>`;
+            }
+          });
+          tipoHtml += `</ul>`;
+          return tipoHtml;
+        }
+
+        html += renderTipo("🐎 Milhar", dados.milhar);
+        html += renderTipo("🎯 Centena", dados.centena);
+        html += renderTipo("🔢 Dezena", dados.dezena);
+        html += renderTipo("🐘 Grupo", dados.grupo);
+        html += renderTipo("💥 Duque", dados.duque);
+
+        resultadoDiv.innerHTML = html;
+      }).catch(err => {
+        resultadoDiv.innerHTML = `<p style="color:red">⚠️ Erro ao buscar aposta: ${err.message}</p>`;
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>📄 Detalhes da Aposta</h2>
+    <div id="resultado" class="resultado"></div>
+  </div>
+</body>
+</html>
