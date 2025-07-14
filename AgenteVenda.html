@@ -389,7 +389,9 @@ function calcularTotal() {
       document.getElementById("modalErro").style.display = "none";
     }
 
-    let dadosParaSalvar = null;
+
+
+let dadosParaSalvar = null;
 
 function enviarWhatsApp() {
   const totalPagar = parseFloat(document.getElementById("totalPagar").textContent) || 0;
@@ -431,7 +433,7 @@ function enviarWhatsApp() {
     }
   });
 
-  // Montar estrutura para Firebase e WhatsApp
+  // 🔧 Construir estrutura final
   let firebaseData = {
     codigo,
     horario,
@@ -442,32 +444,36 @@ function enviarWhatsApp() {
     resumoFormatado: {}
   };
 
-  let resumoTexto = "";
+  let textoWhatsApp = `*Código da aposta:* ${codigo}\n`;
 
   Object.entries(resumo).forEach(([chave, numeros]) => {
     const [tipo, valor, pos] = chave.split("-");
     const rotulo = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+    const label = tipo === "grupo"
+      ? `${rotulo} do 1° ao ${pos}°`
+      : `${rotulo} R$${parseFloat(valor).toFixed(2)} 1° ao ${pos}°`;
 
-    let label = `${rotulo} R$${parseFloat(valor).toFixed(2)} 1° ao ${pos}°`;
-    if (tipo === "grupo") label = `${rotulo} do 1° ao ${pos}°`;
+    const firebaseKey = label.replace(/[.#$/[\]º°]/g, "").replace(/\s+/g, "_");
 
-    if (!firebaseData.resumoFormatado[label]) {
-      firebaseData.resumoFormatado[label] = [];
-    }
-
-    firebaseData.resumoFormatado[label].push(...numeros);
-    resumoTexto += `\n${label}\n${numeros.join("-")}\n`;
+    firebaseData.resumoFormatado[firebaseKey] = numeros;
+    textoWhatsApp += `\n${label}\n${numeros.join("-")}\n`;
   });
 
   if (duques.length > 0) {
     firebaseData.resumoFormatado["Duque"] = duques;
-    resumoTexto += `\nDuque\n${duques.join("\n")}\n`;
+    textoWhatsApp += `\nDuque\n${duques.join("\n")}\n`;
   }
 
-  // Exibir modal com resumo antes de confirmar
-  document.getElementById("resumoTexto").textContent = `Código da aposta: ${codigo}\n${resumoTexto}`;
+  // Exibir modal com resumo formatado
+  document.getElementById("resumoTexto").textContent = textoWhatsApp;
   document.getElementById("modalResumo").style.display = "flex";
-  dadosParaSalvar = { codigo, firebaseData };
+
+  // Guardar dados para enviar depois
+  dadosParaSalvar = {
+    codigo,
+    firebaseData,
+    textoWhatsApp
+  };
 }
     window.onload = () => {
   adicionarCampos("milhar", 3);
