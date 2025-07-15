@@ -89,35 +89,49 @@ function buscarApostaPorCodigo(codigo) {
         dados.totalReceber
       ).toFixed(2)}</p>`;
 
+    // 🔍 Separar por tipo
+    const tiposSeparados = {
+      milhar: [],
+      centena: [],
+      dezena: [],
+      grupo: []
+    };
+
+    if (Array.isArray(dados.apostas)) {
+      dados.apostas.forEach(item => {
+        const tipo = item.tipo?.toLowerCase();
+        if (tiposSeparados[tipo]) {
+          tiposSeparados[tipo].push(item);
+        }
+      });
+    }
+
     function renderTipo(titulo, arr) {
-      if (!arr || !Array.isArray(arr) || arr.length === 0) return "";
+      if (!arr || arr.length === 0) return "";
       let tipoHtml = `<h4>${titulo}</h4><ul>`;
       arr.forEach((item) => {
-        if (typeof item === "object" && item !== null) {
-          const numero = item.numero ?? item.numeros ?? "N/A";
-          const valor =
-            item.valor != null
-              ? `R$ ${Number(item.valor).toFixed(2)}`
-              : "";
-          const posicao = item.posicao ? `(${item.posicao})` : "";
-          const receber =
-            item.receber != null
-              ? `→ Receber R$ ${Number(item.receber).toFixed(2)}`
-              : "";
-          tipoHtml += `<li>${numero} ${valor} ${posicao} ${receber}</li>`;
-        } else {
-          tipoHtml += `<li>${item}</li>`;
-        }
+        const numero = item.numero ?? item.numeros ?? "N/A";
+        const valor = item.valor != null ? `R$ ${Number(item.valor).toFixed(2)}` : "";
+        const posicao = item.posicao ? `(1º ao ${item.posicao}º)` : "";
+        const receber = item.receber != null ? `→ Receber R$ ${Number(item.receber).toFixed(2)}` : "";
+        tipoHtml += `<li>${numero} ${valor} ${posicao} ${receber}</li>`;
       });
       tipoHtml += `</ul>`;
       return tipoHtml;
     }
 
-    html += renderTipo("🐎 Milhar", dados.milhar);
-    html += renderTipo("🎯 Centena", dados.centena);
-    html += renderTipo("🔢 Dezena", dados.dezena);
-    html += renderTipo("🐘 Grupo", dados.grupo);
-    html += renderTipo("💥 Duque", dados.duque);
+    html += renderTipo("🐎 Milhar", tiposSeparados.milhar);
+    html += renderTipo("🎯 Centena", tiposSeparados.centena);
+    html += renderTipo("🔢 Dezena", tiposSeparados.dezena);
+    html += renderTipo("🐘 Grupo", tiposSeparados.grupo);
+
+    if (Array.isArray(dados.duques) && dados.duques.length > 0) {
+      html += `<h4>💥 Duque de Dezenas</h4><ul>`;
+      dados.duques.forEach(d => {
+        html += `<li>${d}</li>`;
+      });
+      html += `</ul>`;
+    }
 
     resultadoDiv.innerHTML = html;
   }).catch((err) => {
