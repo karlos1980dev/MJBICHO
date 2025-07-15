@@ -5,13 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Multijogo EA - Apostas</title>
   <style>
-    /* Reset básico */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+      
+      .topo-fixo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #1f1c2c;
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 9999;
+  gap: 12px;
+  border-bottom: 2px solid #25d366;
+}
+
+.topo-fixo input {
+  padding: 8px;
+  width: 100px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.topo-fixo button {
+  background-color: #25d366;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 
     body {
       background: linear-gradient(135deg, #1f1c2c, #928dab);
@@ -337,6 +364,11 @@
 
   return texto;
 }
+function sincronizarValor() {
+  const valorTopo = document.getElementById("valorUnicoTopo").value;
+  document.getElementById("valorUnico").value = valorTopo;
+  calcularTotal();
+}
 function calcularTotal() {
   const valorUnitario = parseFloat(document.getElementById("valorUnico").value) || 0;
 
@@ -357,7 +389,7 @@ function calcularTotal() {
     if (inputsPreenchidos > 0) {
       totalPagar += valorUnitario * inputsPreenchidos;
 
-      // valor fixo por tipo (uma vez só)
+      // Valor fixo por tipo (só soma uma vez por tipo)
       if (tipo === 'milhar') totalReceber += 5000;
       if (tipo === 'centena') totalReceber += 600;
       if (tipo === 'dezena') totalReceber += 70;
@@ -365,13 +397,13 @@ function calcularTotal() {
     }
   });
 
-  // Duque especial
+  // DUQUE DE DEZENA
   const duqueDivs = document.querySelectorAll('#duqueContainer > div');
   let duquePreenchido = 0;
 
   duqueDivs.forEach(div => {
-    const [i1, i2] = div.querySelectorAll('input');
-    if (i1?.value && i2?.value) {
+    const [input1, input2] = div.querySelectorAll('input');
+    if (input1?.value && input2?.value) {
       duquePreenchido++;
     }
   });
@@ -381,10 +413,25 @@ function calcularTotal() {
     totalReceber += 300; // valor fixo do duque
   }
 
-  document.getElementById("totalPagar").textContent = totalPagar.toFixed(2);
-  document.getElementById("totalReceber").textContent = totalReceber.toFixed(2);
-}
+  // Atualizar valores no TOPO
+  const totalFinalEl = document.getElementById("totalFinal");
+  if (totalFinalEl) {
+    totalFinalEl.textContent = ` Total: ${totalPagar.toFixed(2)}`;
+  }
 
+  const totalReceberTopo = document.getElementById("totalReceberTopo");
+  if (totalReceberTopo) {
+    totalReceberTopo.textContent = `🎯 Receber: R$ ${totalReceber.toFixed(2)}`;
+  }
+
+  // Também atualiza os elementos usados em outras funções, se quiser salvar
+  const totalPagarEl = document.getElementById("totalPagar");
+  if (totalPagarEl) {
+    totalPagarEl.textContent = totalPagar.toFixed(2);
+  }
+
+  
+}
     function gerarCodigoAposta() {
       return `MJ-${Date.now()}`;
     }
@@ -413,85 +460,95 @@ function enviarWhatsApp() {
     return;
   }
 
-  let resumo = {};
-  let tipos = ["milhar", "centena", "dezena", "grupo"];
+  const apostas = [];
+  const tipos = ["milhar", "centena", "dezena", "grupo"];
 
   tipos.forEach(tipo => {
     const container = document.getElementById(tipo + "Container");
-    container.querySelectorAll("div").forEach(grupo => {
-      const input = grupo.querySelector("input");
-      const select = grupo.querySelector("select");
+    container.querySelectorAll("div").forEach(div => {
+      const input = div.querySelector("input");
+      const select = div.querySelector("select");
 
       if (input && input.value.trim() !== "") {
-        const numero = input.value.trim();
-        const posicao = select.value;
-
-        const chave = `${tipo}-${valorUnico}-${posicao}`;
-        if (!resumo[chave]) resumo[chave] = [];
-        resumo[chave].push(numero);
+        apostas.push({
+          tipo: tipo,
+          numero: input.value.trim(),
+          posicao: select.value,
+          valor: valorUnico
+        });
       }
     });
   });
 
-  let duques = [];
-  const duqueContainer = document.getElementById("duqueContainer");
-  duqueContainer.querySelectorAll("div").forEach(div => {
-    const [i1, i2] = div.querySelectorAll("input");
-    if (i1?.value && i2?.value) {
-      duques.push(`${i1.value}x${i2.value}`);
+  const duques = [];
+  document.querySelectorAll("#duqueContainer > div").forEach(div => {
+    const inputs = div.querySelectorAll("input");
+    const val1 = inputs[0].value.trim();
+    const val2 = inputs[1].value.trim();
+    if (val1 && val2) {
+      duques.push(`${val1}x${val2}`);
     }
   });
 
-  // 🔧 Construir estrutura final
-  let firebaseData = {
-    codigo,
-    horario,
-    valorUnico,
-    totalPagar,
-    totalReceber: parseFloat(document.getElementById("totalReceber").textContent),
-    timestamp: Date.now(),
-    resumoFormatado: {}
+  // ✅ Preparar texto do WhatsApp
+  let textoWhatsApp = `*Código da aposta:* ${codigo}\n*Horário:* ${horario}\n\n`;
+
+  const titulos = {
+    milhar: "Milhar 5000",
+    centena: "Centena 600",
+    dezena: "Dezena 70",
+    grupo: "Grupo 16"
   };
 
-  let textoWhatsApp = `*Código da aposta:* ${codigo}\n`;
-
-  Object.entries(resumo).forEach(([chave, numeros]) => {
-    const [tipo, valor, pos] = chave.split("-");
-    const rotulo = tipo.charAt(0).toUpperCase() + tipo.slice(1);
-    const label = tipo === "grupo"
-      ? `${rotulo} do 1° ao ${pos}°`
-      : `${rotulo} R$${parseFloat(valor).toFixed(2)} 1° ao ${pos}°`;
-
-    const firebaseKey = label.replace(/[.#$/[\]º°]/g, "").replace(/\s+/g, "_");
-
-    firebaseData.resumoFormatado[firebaseKey] = numeros;
-    textoWhatsApp += `\n${label}\n${numeros.join("-")}\n`;
+  tipos.forEach(tipo => {
+    const selecionados = apostas.filter(a => a.tipo === tipo);
+    if (selecionados.length > 0) {
+      textoWhatsApp += `*${titulos[tipo]}*\n`;
+      selecionados.forEach(ap => {
+        textoWhatsApp += `${ap.numero} R$ ${ap.valor.toFixed(2)} 1ao${ap.posicao}\n`;
+      });
+      textoWhatsApp += `\n`;
+    }
   });
 
   if (duques.length > 0) {
-    firebaseData.resumoFormatado["Duque"] = duques;
-    textoWhatsApp += `\nDuque\n${duques.join("\n")}\n`;
+    textoWhatsApp += `*Duque 300*\n`;
+    duques.forEach(d => {
+      textoWhatsApp += `${d} R$ ${valorUnico.toFixed(2)} 1ao5\n`;
+    });
+    textoWhatsApp += `\n`;
   }
 
-  // Exibir modal com resumo formatado
+  textoWhatsApp += `💰 *Total a Pagar:* R$ ${totalPagar.toFixed(2)}`;
+
+  // ✅ Mostrar modal com resumo
   document.getElementById("resumoTexto").textContent = textoWhatsApp;
   document.getElementById("modalResumo").style.display = "flex";
 
-  // Guardar dados para enviar depois
+  // ✅ Objeto para Firebase
   dadosParaSalvar = {
     codigo,
-    firebaseData,
+    firebaseData: {
+      codigo,
+      horario,
+      valorUnico,
+      totalPagar,
+      timestamp: Date.now(),
+      apostas,
+      duques
+    },
     textoWhatsApp
   };
 }
+ 
     window.onload = () => {
   adicionarCampos("milhar", 3);
   adicionarCampos("centena", 3);
   adicionarCampos("dezena", 3);
   adicionarCampos("grupo", 3);
   adicionarCamposDuque();
-  bloquearHorariosPassados(); // ✅ Chamar a função ao carregar a página
-  calcularTotal();
+  bloquearHorariosPassados();
+  calcularTotal(); // ✅ já atualiza tudo, inclusive totalReceberTopo
 };
     function bloquearHorariosPassados() {
       const agora = new Date();
@@ -538,7 +595,19 @@ function confirmarEnvio() {
 }
   </script>
 </head>
+
 <body><!-- Modal de Resumo -->
+<div class="topo-fixo">
+  <input type="number" id="valorUnicoTopo" placeholder="Valor (R$)" min="1" oninput="sincronizarValor()" />
+  <input type="hidden" id="valorUnico" />
+
+  <span id="totalFinal">Total:0,00</span>
+ 
+
+  <button id="apostarBtn" onclick="enviarWhatsApp()">Apostar</button>
+</div>
+
+
 <div id="modalResumo" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; padding:20px;">
   <div style="background:#2c2a3a; padding:20px; border-radius:10px; max-width:90%; width:400px; color:#fff; text-align:left; box-shadow:0 8px 20px rgba(0,0,0,0.5); position:relative;">
     <span onclick="fecharResumo()" style="position:absolute; top:10px; right:14px; font-size:22px; font-weight:900; cursor:pointer; color:#ff4c4c;">✖</span>
@@ -558,8 +627,7 @@ function confirmarEnvio() {
       <option value="21:00">21:00</option>
     </select>
 
-    <input type="number" id="valorUnico" class="valoresInput" placeholder="Valor único para todos" step="0.01" oninput="calcularTotal()" />
-
+ 
     <div id="milharContainer"></div>
     <button onclick="adicionarCampos('milhar',1)">+ Milhar</button>
 
@@ -574,14 +642,11 @@ function confirmarEnvio() {
 
     <div id="duqueContainer"></div>
     <button onclick="adicionarCamposDuque()">+ Duque</button>
-
-    <div class="resultado">
-      Total a Pagar: R$ <span id="totalPagar">0.00</span><br>
-      <span>X</span></br>
-      Total a Receber: R$ <span id="totalReceber">0.00</span>
-    </div>
-
-    <button onclick="enviarWhatsApp()">VALIDAR PULE</button>
+</br>
+<!-- Elementos ocultos para evitar erro -->
+<span id="totalPagar" style="display:none"></span>
+<span id="totalReceber" style="display:none"></span>
+    <button onclick="enviarWhatsApp()"style="display:none">VALIDAR PULE</button>    
   </div>
 
   <!-- Modal -->
