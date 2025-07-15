@@ -220,20 +220,29 @@
   </style>
 
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
-      authDomain: "multijogo.firebaseapp.com",
-      databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
-      projectId: "multijogo",
-      storageBucket: "multijogo.appspot.com",
-      messagingSenderId: "328198585423",
-      appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
-    };
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // 🔧 Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+    authDomain: "multijogo.firebaseapp.com",
+    databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+    projectId: "multijogo",
+    storageBucket: "multijogo.appspot.com",
+    messagingSenderId: "328198585423",
+    appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
+  };
+
+  // ✅ Inicializar Firebase somente se ainda não tiver sido inicializado
+  if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  }
+
+  // 🔌 Conectar ao Realtime Database
+  const db = firebase.database();
 
     const valoresPremio = {
       milhar: 5000, centena: 600, dezena: 70, grupo: 16, duque: 300
