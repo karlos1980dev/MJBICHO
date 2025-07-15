@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>APOSTE E GANHE</title>
+  <title>Multijogo EA - Apostas</title>
   <style>
       
       .topo-fixo {
@@ -627,21 +627,21 @@ function confirmarEnvio() {
       <option value="21:00">21:00</option>
     </select>
 
- 
+   <button onclick="adicionarCampos('milhar',1)">+ Milhar</button>
     <div id="milharContainer"></div>
-    <button onclick="adicionarCampos('milhar',1)">+ Milhar</button>
-
+  
+  <button onclick="adicionarCampos('centena',1)">+ Centena</button>
     <div id="centenaContainer"></div>
-    <button onclick="adicionarCampos('centena',1)">+ Centena</button>
-
+  
+  <button onclick="adicionarCampos('dezena',1)">+ Dezena</button>
     <div id="dezenaContainer"></div>
-    <button onclick="adicionarCampos('dezena',1)">+ Dezena</button>
-
+  
+  <button onclick="adicionarCampos('grupo',1)">+ Grupo</button>
     <div id="grupoContainer"></div>
-    <button onclick="adicionarCampos('grupo',1)">+ Grupo</button>
-
+  
+ <button onclick="adicionarCamposDuque()">+ Duque</button>
     <div id="duqueContainer"></div>
-    <button onclick="adicionarCamposDuque()">+ Duque</button>
+   
 </br>
 <!-- Elementos ocultos para evitar erro -->
 <span id="totalPagar" style="display:none"></span>
