@@ -101,76 +101,54 @@
     }
 
     function buscarAposta() {
-      const codigo = document.getElementById("codigoInput").value.trim();
-      const resultado = document.getElementById("resultado");
-      const botoes = document.getElementById("botoesCompartilhar");
+  const codigo = document.getElementById("codigoInput").value.trim();
+  const resultado = document.getElementById("resultado");
+  const botoes = document.getElementById("botoesCompartilhar");
 
-      if (!codigo) {
-        abrirModal("Digite o código da aposta.");
-        return;
-      }
+  if (!codigo) {
+    abrirModal("Digite o código da aposta.");
+    return;
+  }
 
-      db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
-        const dados = snapshot.val();
+  db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
+    const dados = snapshot.val();
 
-        if (!dados) {
-          resultado.textContent = `❌ Aposta não encontrada para o código: ${codigo}`;
-          botoes.style.display = "none";
-          codigoAtual = "";
-          return;
-        }
+    if (!dados) {
+      resultado.textContent = `❌ Aposta não encontrada para o código: ${codigo}`;
+      botoes.style.display = "none";
+      codigoAtual = "";
+      return;
+    }
 
-        codigoAtual = codigo;
-        botoes.style.display = "block";
+    codigoAtual = codigo;
+    botoes.style.display = "block";
 
-        let texto = `📄 Código: ${codigo}\n`;
-        if (dados.horario) texto += `🕒 Horário: ${dados.horario}\n`;
-        if (dados.valorUnico != null) texto += `💵 Valor: R$ ${Number(dados.valorUnico).toFixed(2)}\n`;
-        texto += `\n`;
+    let texto = `📄 Código: ${codigo}\n`;
+    if (dados.horario) texto += `🕒 Horário: ${dados.horario}\n`;
+    if (dados.valorUnico != null) texto += `💵 Valor: R$ ${Number(dados.valorUnico).toFixed(2)}\n`;
+    if (dados.totalPagar != null) texto += `💰 Total a Pagar: R$ ${Number(dados.totalPagar).toFixed(2)}\n`;
 
-        const resumo = dados.resumoFormatado || {};
+    texto += `\n🔢 Detalhes da Aposta:\n`;
 
-        if (Object.keys(resumo).length === 0) {
-          texto += "Nenhum detalhe disponível para esta aposta.\n";
-        } else {
-          for (const tipo in resumo) {
-            const numeros = resumo[tipo];
-            if (Array.isArray(numeros) && numeros.length > 0) {
-              texto += `🔹 ${tipo}:\n${numeros.join(" - ")}\n\n`;
-            }
-          }
-        }
-
-        resultado.textContent = texto;
-      }).catch(error => {
-        abrirModal("Erro ao buscar a aposta. Tente novamente.");
-        console.error(error);
+    if (Array.isArray(dados.apostas) && dados.apostas.length > 0) {
+      dados.apostas.forEach(ap => {
+        texto += `• ${ap.tipo.toUpperCase()} ${ap.numero} (1º ao ${ap.posicao}º) - R$ ${Number(ap.valor).toFixed(2)}\n`;
       });
     }
 
-    function compartilharWhatsApp() {
-      if (!codigoAtual) {
-        abrirModal("Nenhuma aposta carregada para compartilhar.");
-        return;
-      }
-      const textoWhats = encodeURIComponent(`Consultei a aposta código: ${codigoAtual}\nhttps://seusite.com/buscar.html?codigo=${codigoAtual}`);
-      const link = `https://wa.me/5571992290058?text=${textoWhats}`;
-      window.open(link, "_blank");
-    }
-
-    function compartilharLink() {
-      if (!codigoAtual) {
-        abrirModal("Nenhuma aposta carregada para copiar link.");
-        return;
-      }
-      const link = `${window.location.origin}/aposta_viewerK.html?codigo=${codigoAtual}`;
-      navigator.clipboard.writeText(link).then(() => {
-        abrirModal("🔗 Link copiado para área de transferência!");
-      }).catch(() => {
-        abrirModal("Erro ao copiar link.");
+    if (Array.isArray(dados.duques) && dados.duques.length > 0) {
+      texto += `\n🎲 Duque 300\n`;
+      dados.duques.forEach(d => {
+        texto += `• ${d} R$ ${Number(dados.valorUnico).toFixed(2)} 1ao5\n`;
       });
     }
 
+    resultado.textContent = texto;
+  }).catch(error => {
+    abrirModal("Erro ao buscar a aposta. Tente novamente.");
+    console.error(error);
+  });
+}
     function baixarPDF() {
       if (!codigoAtual) {
         abrirModal("Nenhuma aposta carregada para baixar.");
@@ -194,6 +172,18 @@
         buscarAposta();
       }
     }
+    function compartilharLink() {
+  if (!codigoAtual) {
+    abrirModal("Nenhuma aposta carregada para copiar link.");
+    return;
+  }
+  const link = `https://karlos1980dev.github.io/MJBICHO/aposta_viewerK.html?codigo=${codigoAtual}`;
+  navigator.clipboard.writeText(link).then(() => {
+    abrirModal("🔗 Link copiado para área de transferência!");
+  }).catch(() => {
+    abrirModal("Erro ao copiar link.");
+  });
+}
   </script>
 </head>
 
