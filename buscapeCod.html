@@ -29,6 +29,7 @@
       font-size: 1rem;
       cursor: pointer;
       margin: 5px;
+      transition: background 0.3s ease;
     }
     button:hover { background: #1fa455; }
 
@@ -44,6 +45,9 @@
       margin-top: 20px;
       text-align: left;
       white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 1rem;
+      line-height: 1.4;
     }
 
     .modal {
@@ -60,12 +64,18 @@
       padding: 20px;
       border-radius: 10px;
       color: white;
+      max-width: 90%;
+      word-wrap: break-word;
     }
   </style>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- html2pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
@@ -79,7 +89,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let codigoAtual = ""; // será usado para os botões
+    let codigoAtual = "";
 
     function abrirModal(msg) {
       const modal = document.getElementById("modalMensagem");
@@ -103,8 +113,9 @@
         const dados = snapshot.val();
 
         if (!dados) {
-          resultado.innerHTML = `❌ Aposta não encontrada para o código: ${codigo}`;
+          resultado.textContent = `❌ Aposta não encontrada para o código: ${codigo}`;
           botoes.style.display = "none";
+          codigoAtual = "";
           return;
         }
 
@@ -112,35 +123,66 @@
         botoes.style.display = "block";
 
         let texto = `📄 Código: ${codigo}\n`;
-        texto += dados.horario ? `🕒 Horário: ${dados.horario}\n` : "";
-        texto += dados.valorUnico ? `💵 Valor: R$ ${dados.valorUnico.toFixed(2)}\n` : "";
+        if (dados.horario) texto += `🕒 Horário: ${dados.horario}\n`;
+        if (dados.valorUnico != null) texto += `💵 Valor: R$ ${Number(dados.valorUnico).toFixed(2)}\n`;
         texto += `\n`;
 
         const resumo = dados.resumoFormatado || {};
 
-        for (const tipo in resumo) {
-          const numeros = resumo[tipo];
-          texto += `🔹 ${tipo}:\n${numeros.join(" - ")}\n\n`;
+        if (Object.keys(resumo).length === 0) {
+          texto += "Nenhum detalhe disponível para esta aposta.\n";
+        } else {
+          for (const tipo in resumo) {
+            const numeros = resumo[tipo];
+            if (Array.isArray(numeros) && numeros.length > 0) {
+              texto += `🔹 ${tipo}:\n${numeros.join(" - ")}\n\n`;
+            }
+          }
         }
 
         resultado.textContent = texto;
+      }).catch(error => {
+        abrirModal("Erro ao buscar a aposta. Tente novamente.");
+        console.error(error);
       });
     }
 
     function compartilharWhatsApp() {
-      if (!codigoAtual) return;
-      const link = `https://wa.me/5571992290058?text=Consultei a aposta código: ${codigoAtual}%0Ahttps://seusite.com/buscar.html?codigo=${codigoAtual}`;
+      if (!codigoAtual) {
+        abrirModal("Nenhuma aposta carregada para compartilhar.");
+        return;
+      }
+      const textoWhats = encodeURIComponent(`Consultei a aposta código: ${codigoAtual}\nhttps://seusite.com/buscar.html?codigo=${codigoAtual}`);
+      const link = `https://wa.me/5571992290058?text=${textoWhats}`;
       window.open(link, "_blank");
     }
 
     function compartilharLink() {
-      if (!codigoAtual) return;
+      if (!codigoAtual) {
+        abrirModal("Nenhuma aposta carregada para copiar link.");
+        return;
+      }
       const link = `${window.location.origin}/aposta_viewerK.html?codigo=${codigoAtual}`;
       navigator.clipboard.writeText(link).then(() => {
         abrirModal("🔗 Link copiado para área de transferência!");
       }).catch(() => {
         abrirModal("Erro ao copiar link.");
       });
+    }
+
+    function baixarPDF() {
+      if (!codigoAtual) {
+        abrirModal("Nenhuma aposta carregada para baixar.");
+        return;
+      }
+      const element = document.getElementById("resultado");
+      html2pdf().set({
+        margin: 0.5,
+        filename: `Aposta_${codigoAtual}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      }).from(element).save();
     }
 
     window.onload = () => {
@@ -156,18 +198,19 @@
 
 <body>
   <h2>🔍 Buscar Aposta</h2>
-  <input id="codigoInput" type="text" placeholder="Digite o código (ex: MJ-1752...)" />
-  <br>
+  <input id="codigoInput" type="text" placeholder="Digite o código (ex: MJ-1752...)" autocomplete="off" />
+  <br />
   <button onclick="buscarAposta()">Buscar</button>
 
-  <div id="botoesCompartilhar" class="extra-buttons">
+  <div id="botoesCompartilhar" class="extra-buttons" style="display:none;">
     <button onclick="compartilharWhatsApp()">📤 WhatsApp</button>
     <button onclick="compartilharLink()">🔗 Copiar Link</button>
+    <button onclick="baixarPDF()">📥 Baixar PDF</button>
   </div>
 
   <pre id="resultado">🕵️ Digite o código acima para ver os detalhes.</pre>
 
-  <div id="modalMensagem" class="modal">
+  <div id="modalMensagem" class="modal" role="alert" aria-live="assertive" aria-atomic="true">
     <div>
       <p id="mensagemModal"></p>
     </div>
