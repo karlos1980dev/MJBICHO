@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Visualizar Aposta</title>
   <style>
     body {
@@ -36,28 +36,11 @@
     li {
       margin-bottom: 5px;
     }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #25d366;
-      border: none;
-      color: #fff;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1fa455;
-    }
   </style>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <!-- html2pdf.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
@@ -71,13 +54,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let codigoGlobal = '';
-
     window.onload = function () {
       const params = new URLSearchParams(window.location.search);
       const codigo = params.get("codigo");
       if (codigo) {
-        codigoGlobal = codigo;
         buscarApostaPorCodigo(codigo);
       } else {
         document.getElementById("resultado").innerHTML = "<p style='color:red'>❗ Código da aposta não informado na URL.</p>";
@@ -96,49 +76,38 @@
         }
 
         let html = `<h3>🎯 Aposta ${codigo}</h3>`;
-        if (dados.horario) html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
-        if (dados.totalPagar !== undefined) html += `<p><strong>💰 Total Apostado:</strong> R$ ${Number(dados.totalPagar).toFixed(2)}</p>`;
-        if (dados.totalReceber !== undefined) html += `<p><strong>🏆 Possível Retorno:</strong> R$ ${Number(dados.totalReceber).toFixed(2)}</p>`;
+        html += dados.horario ? `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>` : "";
+        html += dados.totalPagar !== undefined ? `<p><strong>💰 Total a Pagar:</strong> R$ ${Number(dados.totalPagar).toFixed(2)}</p>` : "";
+        html += dados.totalReceber !== undefined ? `<p><strong>🏆 Possível Retorno:</strong> R$ ${Number(dados.totalReceber).toFixed(2)}</p>` : "";
 
-        function renderTipo(titulo, array) {
-          if (!array || !Array.isArray(array) || array.length === 0) return '';
-          let html = `<h4>${titulo}</h4><ul>`;
-          array.forEach(item => {
-            let linha = "";
-            if (item.numero) linha += `${item.numero}`;
-            else if (item.numeros) linha += `${item.numeros}`;
-            if (item.valor !== undefined) linha += ` - R$ ${Number(item.valor).toFixed(2)}`;
-            if (item.posicao) linha += ` (${item.posicao})`;
-            if (item.receber) linha += ` → Receber R$ ${Number(item.receber).toFixed(2)}`;
-            html += `<li>${linha}</li>`;
+        function renderTipo(titulo, arr) {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) return '';
+          let tipoHtml = `<h4>${titulo}</h4><ul>`;
+          arr.forEach(item => {
+            if (typeof item === "object") {
+              const numero = item.numero || item.numeros || "N/A";
+              const valor = item.valor ? `R$ ${Number(item.valor).toFixed(2)}` : "";
+              const posicao = item.posicao ? `(${item.posicao})` : "";
+              const receber = item.receber ? `→ Receber R$ ${Number(item.receber).toFixed(2)}` : "";
+              tipoHtml += `<li>${numero} ${valor} ${posicao} ${receber}</li>`;
+            } else {
+              tipoHtml += `<li>${item}</li>`;
+            }
           });
-          html += `</ul>`;
-          return html;
+          tipoHtml += `</ul>`;
+          return tipoHtml;
         }
 
         html += renderTipo("🐎 Milhar", dados.milhar);
         html += renderTipo("🎯 Centena", dados.centena);
         html += renderTipo("🔢 Dezena", dados.dezena);
         html += renderTipo("🐘 Grupo", dados.grupo);
-        html += renderTipo("💥 Duque de Dezena", dados.duque);
+        html += renderTipo("💥 Duque", dados.duque);
 
         resultadoDiv.innerHTML = html;
-        document.getElementById("botaoPDF").style.display = "inline-block";
       }).catch(err => {
         resultadoDiv.innerHTML = `<p style="color:red">⚠️ Erro ao buscar aposta: ${err.message}</p>`;
       });
-    }
-
-    function baixarPDF() {
-      const elemento = document.getElementById("resultado");
-      const opt = {
-        margin:       0.5,
-        filename:     `Aposta_${codigoGlobal}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().set(opt).from(elemento).save();
     }
   </script>
 </head>
@@ -146,7 +115,6 @@
   <div class="container">
     <h2>📄 Detalhes da Aposta</h2>
     <div id="resultado" class="resultado"></div>
-    <button id="botaoPDF" onclick="baixarPDF()" style="display:none">📥 Baixar PDF</button>
   </div>
 </body>
 </html>
