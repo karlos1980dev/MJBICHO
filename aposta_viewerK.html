@@ -43,72 +43,87 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
-      authDomain: "multijogo.firebaseapp.com",
-      databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
-      projectId: "multijogo",
-      storageBucket: "multijogo.appspot.com",
-      messagingSenderId: "328198585423",
-      appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+  authDomain: "multijogo.firebaseapp.com",
+  databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+  projectId: "multijogo",
+  storageBucket: "multijogo.appspot.com",
+  messagingSenderId: "328198585423",
+  appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
+};
 
-    window.onload = function () {
-      const params = new URLSearchParams(window.location.search);
-      const codigo = params.get("codigo");
-      if (codigo) {
-        buscarApostaPorCodigo(codigo);
-      } else {
-        document.getElementById("resultado").innerHTML = "<p style='color:red'>❗ Código da aposta não informado na URL.</p>";
-      }
-    };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    function buscarApostaPorCodigo(codigo) {
-      const resultadoDiv = document.getElementById('resultado');
-      resultadoDiv.innerHTML = "<p>🔄 Buscando aposta...</p>";
+window.onload = () => {
+  const params = new URLSearchParams(window.location.search);
+  const codigo = params.get("codigo");
+  if (codigo) {
+    buscarApostaPorCodigo(codigo.trim());
+  } else {
+    document.getElementById("resultado").innerHTML =
+      "<p style='color:red'>❗ Código da aposta não informado na URL.</p>";
+  }
+};
 
-      db.ref(`apostas/${codigo}`).once('value').then(snapshot => {
-        const dados = snapshot.val();
-        if (!dados) {
-          resultadoDiv.innerHTML = `<p>❌ Aposta não encontrada para o código: <strong>${codigo}</strong></p>`;
-          return;
-        }
+function buscarApostaPorCodigo(codigo) {
+  const resultadoDiv = document.getElementById("resultado");
+  resultadoDiv.innerHTML = "🔍 Buscando aposta...";
 
-        let html = `<h3>🎯 Aposta ${codigo}</h3>`;
-        html += dados.horario ? `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>` : "";
-        html += dados.totalPagar !== undefined ? `<p><strong>💰 Total a Pagar:</strong> R$ ${Number(dados.totalPagar).toFixed(2)}</p>` : "";
-        html += dados.totalReceber !== undefined ? `<p><strong>🏆 Possível Retorno:</strong> R$ ${Number(dados.totalReceber).toFixed(2)}</p>` : "";
-
-        function renderTipo(titulo, arr) {
-          if (!arr || !Array.isArray(arr) || arr.length === 0) return '';
-          let tipoHtml = `<h4>${titulo}</h4><ul>`;
-          arr.forEach(item => {
-            if (typeof item === "object") {
-              const numero = item.numero || item.numeros || "N/A";
-              const valor = item.valor ? `R$ ${Number(item.valor).toFixed(2)}` : "";
-              const posicao = item.posicao ? `(${item.posicao})` : "";
-              const receber = item.receber ? `→ Receber R$ ${Number(item.receber).toFixed(2)}` : "";
-              tipoHtml += `<li>${numero} ${valor} ${posicao} ${receber}</li>`;
-            } else {
-              tipoHtml += `<li>${item}</li>`;
-            }
-          });
-          tipoHtml += `</ul>`;
-          return tipoHtml;
-        }
-
-        html += renderTipo("🐎 Milhar", dados.milhar);
-        html += renderTipo("🎯 Centena", dados.centena);
-        html += renderTipo("🔢 Dezena", dados.dezena);
-        html += renderTipo("🐘 Grupo", dados.grupo);
-        html += renderTipo("💥 Duque", dados.duque);
-
-        resultadoDiv.innerHTML = html;
-      }).catch(err => {
-        resultadoDiv.innerHTML = `<p style="color:red">⚠️ Erro ao buscar aposta: ${err.message}</p>`;
-      });
+  db.ref(`apostas/${codigo}`).once("value").then((snapshot) => {
+    const dados = snapshot.val();
+    if (!dados) {
+      resultadoDiv.innerHTML = `❌ Aposta não encontrada para o código: ${codigo}`;
+      return;
     }
+
+    let html = `<h3>🎯 Aposta ${codigo}</h3>`;
+    if (dados.horario)
+      html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
+    if (dados.totalPagar != null)
+      html += `<p><strong>💰 Total a Pagar:</strong> R$ ${Number(
+        dados.totalPagar
+      ).toFixed(2)}</p>`;
+    if (dados.totalReceber != null)
+      html += `<p><strong>🏆 Possível Retorno:</strong> R$ ${Number(
+        dados.totalReceber
+      ).toFixed(2)}</p>`;
+
+    function renderTipo(titulo, arr) {
+      if (!arr || !Array.isArray(arr) || arr.length === 0) return "";
+      let tipoHtml = `<h4>${titulo}</h4><ul>`;
+      arr.forEach((item) => {
+        if (typeof item === "object" && item !== null) {
+          const numero = item.numero ?? item.numeros ?? "N/A";
+          const valor =
+            item.valor != null
+              ? `R$ ${Number(item.valor).toFixed(2)}`
+              : "";
+          const posicao = item.posicao ? `(${item.posicao})` : "";
+          const receber =
+            item.receber != null
+              ? `→ Receber R$ ${Number(item.receber).toFixed(2)}`
+              : "";
+          tipoHtml += `<li>${numero} ${valor} ${posicao} ${receber}</li>`;
+        } else {
+          tipoHtml += `<li>${item}</li>`;
+        }
+      });
+      tipoHtml += `</ul>`;
+      return tipoHtml;
+    }
+
+    html += renderTipo("🐎 Milhar", dados.milhar);
+    html += renderTipo("🎯 Centena", dados.centena);
+    html += renderTipo("🔢 Dezena", dados.dezena);
+    html += renderTipo("🐘 Grupo", dados.grupo);
+    html += renderTipo("💥 Duque", dados.duque);
+
+    resultadoDiv.innerHTML = html;
+  }).catch((err) => {
+    resultadoDiv.innerHTML = `<p style="color:red">⚠️ Erro ao buscar aposta: ${err.message}</p>`;
+  });
+}
   </script>
 </head>
 <body>
