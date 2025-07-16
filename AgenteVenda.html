@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Multijogo EA - Apostas</title>
+  <title>APOSTE e GANHE</title>
   <style>
       
       .topo-fixo {
@@ -450,6 +450,65 @@ function calcularTotal() {
 let dadosParaSalvar = null;
 
 function enviarWhatsApp() {
+const agora = new Date();
+const horaAgora = agora.getHours();
+if (horaAgora >= 21) {
+  abrirModal("Apostas não são permitidas após as 21:00.");
+  return;
+}
+function validarCampos() {
+  let validado = false;
+
+  function validarTipo(tipo, tamanhoEsperado, max = null) {
+    const container = document.getElementById(tipo + "Container");
+    const inputs = container.querySelectorAll("input");
+
+    for (let input of inputs) {
+      const valor = input.value.trim();
+      if (valor !== "") {
+        validado = true;
+        if (valor.length !== tamanhoEsperado) {
+          abrirModal(`${tipo.toUpperCase()} deve ter ${tamanhoEsperado} dígitos.`);
+          return false;
+        }
+        if (max && parseInt(valor) > max) {
+          abrirModal(`${tipo.toUpperCase()} deve ser no máximo ${max}.`);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  const ok1 = validarTipo("milhar", 4);
+  const ok2 = validarTipo("centena", 3);
+  const ok3 = validarTipo("dezena", 2);
+  const ok4 = validarTipo("grupo", 2, 25);
+
+  // Validar Duque (dois campos preenchidos com 2 dígitos e até 25)
+  const duques = document.querySelectorAll("#duqueContainer > div");
+  for (let duque of duques) {
+    const inputs = duque.querySelectorAll("input");
+    const v1 = inputs[0].value.trim();
+    const v2 = inputs[1].value.trim();
+    if (v1 !== "" || v2 !== "") {
+      validado = true;
+      if (v1.length !== 2 || v2.length !== 2 || parseInt(v1) > 25 || parseInt(v2) > 25) {
+        abrirModal("Duque deve conter dois números de 2 dígitos (máx. 25).");
+        return false;
+      }
+    }
+  }
+
+  if (!validado) {
+    abrirModal("Preencha pelo menos um campo para apostar.");
+    return false;
+  }
+
+  return true;
+}
+if (!validarCampos()) return;
+
   const totalPagar = parseFloat(document.getElementById("totalPagar").textContent) || 0;
   const valorUnico = parseFloat(document.getElementById("valorUnico").value) || 0;
   const horario = document.getElementById("horarioInput").value;
@@ -549,6 +608,7 @@ function enviarWhatsApp() {
   adicionarCamposDuque();
   bloquearHorariosPassados();
   calcularTotal(); // ✅ já atualiza tudo, inclusive totalReceberTopo
+  setInterval(verificarSePodeEnviar, 500); // verifica a cada meio segundo
 };
     function bloquearHorariosPassados() {
       const agora = new Date();
@@ -593,6 +653,18 @@ function confirmarEnvio() {
   fecharResumo();
   window.open(`https://wa.me/5571992290058?text=*Código da aposta:* ${codigo}`, "_blank");
 }
+function verificarSePodeEnviar() {
+  const valor = parseFloat(document.getElementById("valorUnico").value) || 0;
+  let preenchido = false;
+
+  document.querySelectorAll("#milharContainer input, #centenaContainer input, #dezenaContainer input, #grupoContainer input, #duqueContainer input").forEach(input => {
+    if (input.value.trim() !== "") {
+      preenchido = true;
+    }
+  });
+
+  document.getElementById("apostarBtn").disabled = !(valor > 0 && preenchido);
+}
   </script>
 </head>
 
@@ -612,7 +684,7 @@ function confirmarEnvio() {
   <div style="background:#2c2a3a; padding:20px; border-radius:10px; max-width:90%; width:400px; color:#fff; text-align:left; box-shadow:0 8px 20px rgba(0,0,0,0.5); position:relative;">
     <span onclick="fecharResumo()" style="position:absolute; top:10px; right:14px; font-size:22px; font-weight:900; cursor:pointer; color:#ff4c4c;">✖</span>
     <h3 style="text-align:center; color:#25d366; margin-bottom:10px;">Resumo da Aposta</h3>
-    <pre id="resumoTexto" style="white-space:pre-wrap; font-family:'Segoe UI', sans-serif; font-size:0.95rem; line-height:1.5;"></pre>
+  <pre id="resumoTexto" style="white-space:pre-wrap; font-family:'Segoe UI', sans-serif; font-size:0.95rem; line-height:1.5; max-height:300px; overflow-y:auto; padding-right:8px;"></pre>
     <button onclick="confirmarEnvio()" style="margin-top:10px;">CONFIRMAR ENVIO</button>
   </div>
 </div>
@@ -640,8 +712,8 @@ function confirmarEnvio() {
     <div id="grupoContainer"></div>
   
  <button onclick="adicionarCamposDuque()">+ Duque</button>
-    <div id="duqueContainer"></div>
-   
+    <div id="duqueContainer"></div></br>
+   <button style="color:white;background:#25d366;">SORTE TEM QUEM NELA ACREDITA</button>
 </br>
 <!-- Elementos ocultos para evitar erro -->
 <span id="totalPagar" style="display:none"></span>
