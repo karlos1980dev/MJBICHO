@@ -172,18 +172,50 @@
         buscarAposta();
       }
     }
-    function compartilharLink() {
-  if (!codigoAtual) {
-    abrirModal("Nenhuma aposta carregada para copiar link.");
-    return;
+  
+  function compartilharWhatsApp() {
+    if (!codigoAtual) {
+      abrirModal("Nenhuma aposta carregada para compartilhar.");
+      return;
+    }
+
+    const texto = document.getElementById("resultado").textContent;
+    const mensagem = encodeURIComponent(texto);
+    const url = `https://wa.me/?text=${mensagem}`;
+    window.open(url, '_blank');
   }
-  const link = `https://karlos1980dev.github.io/MJBICHO/aposta_viewerK.html?codigo=${codigoAtual}`;
+  const link = `https://mjbicho.netlify.app/aposta_viewerK?codigo=${codigoAtual}`;
   navigator.clipboard.writeText(link).then(() => {
     abrirModal("🔗 Link copiado para área de transferência!");
   }).catch(() => {
     abrirModal("Erro ao copiar link.");
   });
-}
+
+
+  function compartilharWhatsAppTexto() {
+    if (!codigoAtual) {
+      abrirModal("Nenhuma aposta carregada para compartilhar.");
+      return;
+    }
+
+    const texto = document.getElementById("resultado").textContent;
+    const mensagem = encodeURIComponent(texto);
+    const url = `https://wa.me/?text=${mensagem}`;
+    window.open(url, '_blank');
+  }
+
+  function compartilharWhatsAppLink() {
+    if (!codigoAtual) {
+      abrirModal("Nenhuma aposta carregada para compartilhar.");
+      return;
+    }
+
+    const link = `https://mjbicho.netlify.app/aposta_viewerK?codigo=${codigoAtual}`;
+    const mensagem = encodeURIComponent(`📄 Veja sua aposta aqui:\n${link}`);
+    const url = `https://wa.me/?text=${mensagem}`;
+    window.open(url, '_blank');
+  }
+
   </script>
 </head>
 
@@ -194,7 +226,8 @@
   <button onclick="buscarAposta()">Buscar</button>
 
   <div id="botoesCompartilhar" class="extra-buttons" style="display:none;">
-    <button onclick="compartilharWhatsApp()">📤 WhatsApp</button>
+    <button onclick="compartilharWhatsAppTexto()">📝 WhatsApp Texto</button>
+<button onclick="compartilharWhatsAppLink()">🔗 WhatsApp Link</button>
     <button onclick="compartilharLink()">🔗 Copiar Link</button>
     <button onclick="baixarPDF()">📥 Baixar PDF</button>
   </div>
@@ -207,4 +240,4 @@
     </div>
   </div>
 </body>
-</html>
+</html> 
