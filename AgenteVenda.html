@@ -450,69 +450,75 @@ function calcularTotal() {
 let dadosParaSalvar = null;
 
 function enviarWhatsApp() {
-const agora = new Date();
-const horaAgora = agora.getHours();
-if (horaAgora >= 21) {
-  abrirModal("Apostas não são permitidas após as 21:00.");
-  return;
-}
-function validarCampos() {
-  let validado = false;
+const dataHoje = new Date().toLocaleDateString("pt-BR");
+  const agora = new Date();
+  const horaAgora = agora.getHours();
 
-  function validarTipo(tipo, tamanhoEsperado, max = null) {
-    const container = document.getElementById(tipo + "Container");
-    const inputs = container.querySelectorAll("input");
+  if (horaAgora >= 21) {
+    abrirModal("Apostas não são permitidas após as 21:00.");
+    return;
+  }
 
-    for (let input of inputs) {
-      const valor = input.value.trim();
-      if (valor !== "") {
-        validado = true;
-        if (valor.length !== tamanhoEsperado) {
-          abrirModal(`${tipo.toUpperCase()} deve ter ${tamanhoEsperado} dígitos.`);
-          return false;
+  const codigo = gerarCodigoAposta(); // 🔑 Gera código aqui!
+
+  // 🔍 Função interna de validação
+  function validarCampos() {
+    let validado = false;
+
+    function validarTipo(tipo, tamanhoEsperado, max = null) {
+      const container = document.getElementById(tipo + "Container");
+      const inputs = container.querySelectorAll("input");
+
+      for (let input of inputs) {
+        const valor = input.value.trim();
+        if (valor !== "") {
+          validado = true;
+          if (valor.length !== tamanhoEsperado) {
+            abrirModal(`${tipo.toUpperCase()} deve ter ${tamanhoEsperado} dígitos.`);
+            return false;
+          }
+          if (max && parseInt(valor) > max) {
+            abrirModal(`${tipo.toUpperCase()} deve ser no máximo ${max}.`);
+            return false;
+          }
         }
-        if (max && parseInt(valor) > max) {
-          abrirModal(`${tipo.toUpperCase()} deve ser no máximo ${max}.`);
+      }
+      return true;
+    }
+
+    const ok1 = validarTipo("milhar", 4);
+    const ok2 = validarTipo("centena", 3);
+    const ok3 = validarTipo("dezena", 2);
+    const ok4 = validarTipo("grupo", 2, 25);
+
+    // Validar Duque
+    const duques = document.querySelectorAll("#duqueContainer > div");
+    for (let duque of duques) {
+      const inputs = duque.querySelectorAll("input");
+      const v1 = inputs[0].value.trim();
+      const v2 = inputs[1].value.trim();
+      if (v1 !== "" || v2 !== "") {
+        validado = true;
+        if (v1.length !== 2 || v2.length !== 2 || parseInt(v1) > 99 || parseInt(v2) > 99) {
+          abrirModal("Duque deve conter dois números de 2 dígitos (máx. 25).");
           return false;
         }
       }
     }
+
+    if (!validado) {
+      abrirModal("Preencha pelo menos um campo para apostar.");
+      return false;
+    }
+
     return true;
   }
 
-  const ok1 = validarTipo("milhar", 4);
-  const ok2 = validarTipo("centena", 3);
-  const ok3 = validarTipo("dezena", 2);
-  const ok4 = validarTipo("grupo", 2, 25);
-
-  // Validar Duque (dois campos preenchidos com 2 dígitos e até 25)
-  const duques = document.querySelectorAll("#duqueContainer > div");
-  for (let duque of duques) {
-    const inputs = duque.querySelectorAll("input");
-    const v1 = inputs[0].value.trim();
-    const v2 = inputs[1].value.trim();
-    if (v1 !== "" || v2 !== "") {
-      validado = true;
-      if (v1.length !== 2 || v2.length !== 2 || parseInt(v1) > 25 || parseInt(v2) > 25) {
-        abrirModal("Duque deve conter dois números de 2 dígitos (máx. 25).");
-        return false;
-      }
-    }
-  }
-
-  if (!validado) {
-    abrirModal("Preencha pelo menos um campo para apostar.");
-    return false;
-  }
-
-  return true;
-}
-if (!validarCampos()) return;
+  if (!validarCampos()) return;
 
   const totalPagar = parseFloat(document.getElementById("totalPagar").textContent) || 0;
   const valorUnico = parseFloat(document.getElementById("valorUnico").value) || 0;
   const horario = document.getElementById("horarioInput").value;
-  const codigo = gerarCodigoAposta();
 
   if (totalPagar <= 0 || valorUnico <= 0) {
     abrirModal("Informe o valor e preencha pelo menos um campo.");
@@ -530,11 +536,13 @@ if (!validarCampos()) return;
 
       if (input && input.value.trim() !== "") {
         apostas.push({
-          tipo: tipo,
-          numero: input.value.trim(),
-          posicao: select.value,
-          valor: valorUnico
-        });
+  tipo: tipo,
+  numero: input.value.trim(),
+  posicao: select.value,
+  valor: valorUnico,
+  horario: horario,
+  data: dataHoje,
+});
       }
     });
   });
@@ -545,11 +553,16 @@ if (!validarCampos()) return;
     const val1 = inputs[0].value.trim();
     const val2 = inputs[1].value.trim();
     if (val1 && val2) {
-      duques.push(`${val1}x${val2}`);
+      duques.push({
+        numeros: `${val1}-${val2}`,
+        valor: valorUnico,
+        horario: horario,
+        data: dataHoje,
+      });
     }
   });
 
-  // ✅ Preparar texto do WhatsApp
+  // ✅ Criar texto do WhatsApp
   let textoWhatsApp = `*Código da aposta:* ${codigo}\n*Horário:* ${horario}\n\n`;
 
   const titulos = {
@@ -573,18 +586,20 @@ if (!validarCampos()) return;
   if (duques.length > 0) {
     textoWhatsApp += `*Duque 300*\n`;
     duques.forEach(d => {
-      textoWhatsApp += `${d} R$ ${valorUnico.toFixed(2)} 1ao5\n`;
+      textoWhatsApp += `${d.numeros} R$ ${d.valor.toFixed(2)} 1ao5\n`;
     });
     textoWhatsApp += `\n`;
   }
 
   textoWhatsApp += `💰 *Total a Pagar:* R$ ${totalPagar.toFixed(2)}`;
 
-  // ✅ Mostrar modal com resumo
+  // ✅ Mostrar modal
   document.getElementById("resumoTexto").textContent = textoWhatsApp;
   document.getElementById("modalResumo").style.display = "flex";
 
-  // ✅ Objeto para Firebase
+  // ✅ Preparar objeto Firebase
+  
+
   dadosParaSalvar = {
     codigo,
     firebaseData: {
@@ -593,13 +608,13 @@ if (!validarCampos()) return;
       valorUnico,
       totalPagar,
       timestamp: Date.now(),
+      data: dataHoje,
       apostas,
       duques
     },
     textoWhatsApp
   };
 }
- 
     window.onload = () => {
   adicionarCampos("milhar", 3);
   adicionarCampos("centena", 3);
