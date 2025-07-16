@@ -124,22 +124,66 @@
     botoes.style.display = "block";
 
     let texto = `📄 Código: ${codigo}\n`;
-    if (dados.horario) texto += `🕒 Horário: ${dados.horario}\n`;
     if (dados.valorUnico != null) texto += `💵 Valor: R$ ${Number(dados.valorUnico).toFixed(2)}\n`;
     if (dados.totalPagar != null) texto += `💰 Total a Pagar: R$ ${Number(dados.totalPagar).toFixed(2)}\n`;
-
     texto += `\n🔢 Detalhes da Aposta:\n`;
 
-    if (Array.isArray(dados.apostas) && dados.apostas.length > 0) {
+    // AGRUPAR APOSTAS POR TIPO E HORÁRIO+DATA
+    if (Array.isArray(dados.apostas)) {
+      const agrupadoPorTipo = {};
+
       dados.apostas.forEach(ap => {
-        texto += `• ${ap.tipo.toUpperCase()} ${ap.numero} (1º ao ${ap.posicao}º) - R$ ${Number(ap.valor).toFixed(2)}\n`;
+        const tipo = ap.tipo || "OUTRO";
+        const horario = ap.horario || dados.horario || "Sem horário";
+        const data = ap.data || dados.data || "Sem data";
+        const chave = `${horario} | ${data}`;
+
+        if (!agrupadoPorTipo[tipo]) agrupadoPorTipo[tipo] = {};
+        if (!agrupadoPorTipo[tipo][chave]) agrupadoPorTipo[tipo][chave] = [];
+
+        agrupadoPorTipo[tipo][chave].push(ap);
+      });
+
+      Object.keys(agrupadoPorTipo).forEach(tipo => {
+        texto += `\n🎯 ${tipo.toUpperCase()}\n`;
+        const porHorario = agrupadoPorTipo[tipo];
+
+        Object.keys(porHorario).forEach(chave => {
+          const [horario, data] = chave.split("|").map(e => e.trim());
+          texto += `🕒 ${horario} 📅 ${data}\n`;
+
+          porHorario[chave].forEach(ap => {
+            texto += `• ${ap.numero} R$ ${Number(ap.valor).toFixed(2)} 1ao${ap.posicao}\n`;
+          });
+
+          texto += `\n`;
+        });
       });
     }
 
-    if (Array.isArray(dados.duques) && dados.duques.length > 0) {
-      texto += `\n🎲 Duque 300\n`;
+    // DUQUE DE DEZENA
+    if (Array.isArray(dados.duques)) {
+      const duquesPorHorario = {};
+
       dados.duques.forEach(d => {
-        texto += `• ${d} R$ ${Number(dados.valorUnico).toFixed(2)} 1ao5\n`;
+        const horario = d.horario || dados.horario || "Sem horário";
+        const data = d.data || dados.data || "Sem data";
+        const chave = `${horario} | ${data}`;
+
+        if (!duquesPorHorario[chave]) duquesPorHorario[chave] = [];
+        duquesPorHorario[chave].push(d);
+      });
+
+      texto += `\n🎲 DUQUE DE DEZENA\n`;
+      Object.keys(duquesPorHorario).forEach(chave => {
+        const [horario, data] = chave.split("|").map(e => e.trim());
+        texto += `🕒 ${horario} 📅 ${data}\n`;
+
+        duquesPorHorario[chave].forEach(d => {
+          texto += `• ${d.numeros} R$ ${Number(d.valor).toFixed(2)} 1ao5\n`;
+        });
+
+        texto += `\n`;
       });
     }
 
@@ -184,12 +228,19 @@
     const url = `https://wa.me/?text=${mensagem}`;
     window.open(url, '_blank');
   }
+  function compartilharLink() {
+  if (!codigoAtual) {
+    abrirModal("Nenhuma aposta carregada para compartilhar.");
+    return;
+  }
+
   const link = `https://mjbicho.netlify.app/aposta_viewerK?codigo=${codigoAtual}`;
   navigator.clipboard.writeText(link).then(() => {
     abrirModal("🔗 Link copiado para área de transferência!");
   }).catch(() => {
     abrirModal("Erro ao copiar link.");
   });
+}
 
 
   function compartilharWhatsAppTexto() {
