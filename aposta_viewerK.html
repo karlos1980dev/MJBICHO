@@ -8,56 +8,37 @@
     body {
       background: #1f1c2c;
       color: #f0f0f0;
-      font-family: "Courier New", Courier, monospace;
+      font-family: Arial, sans-serif;
       padding: 20px;
       text-align: center;
     }
     .container {
-      max-width: 400px;
-      margin: auto;
+      max-width: 480px;
+      margin: 0 auto;
       background-color: #2c2a3a;
+      padding: 20px;
       border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      white-space: pre-wrap;
+      text-align: left;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 1rem;
+      line-height: 1.4;
+      user-select: text;
     }
     h2 {
       color: #25d366;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      text-align: center;
       text-transform: uppercase;
       letter-spacing: 2px;
+      text-shadow: 0 0 6px #25d366;
     }
-    pre {
-      text-align: left;
-      white-space: pre-wrap;
-      font-size: 1rem;
-      background: #1e1c2c;
-      padding: 10px;
-      border-radius: 8px;
-      max-height: 400px;
-      overflow-y: auto;
-      user-select: text;
-      box-shadow: inset 0 0 5px rgba(37, 211, 102, 0.3);
-    }
-    /* Impressão otimizada para térmica */
-    @media print {
-      body {
-        background: #fff;
-        color: #000;
-        font-family: monospace;
-      }
-      .container {
-        box-shadow: none;
-        background: none;
-        border-radius: 0;
-        padding: 0;
-        max-width: 100%;
-      }
-      pre {
-        background: none;
-        box-shadow: none;
-        padding: 0;
-        max-height: none;
-      }
+    .erro {
+      color: #ff4c4c;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-top: 20px;
     }
   </style>
 
@@ -66,6 +47,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
+    // Configuração Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
       authDomain: "multijogo.firebaseapp.com",
@@ -75,6 +57,7 @@
       messagingSenderId: "328198585423",
       appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -84,24 +67,31 @@
       if (codigo) {
         buscarApostaPorCodigo(codigo.trim());
       } else {
-        document.getElementById("resultado").innerHTML =
-          "<p style='color:red'>❗ Código da aposta não informado na URL.</p>";
+        mostrarErro("❗ Código da aposta não informado na URL.");
       }
     };
 
+    function mostrarErro(msg) {
+      const container = document.getElementById("apostaTexto");
+      if(container){
+        container.textContent = msg;
+        container.classList.add("erro");
+      }
+    }
+
     function buscarApostaPorCodigo(codigo) {
-      const resultadoDiv = document.getElementById("resultado");
-      resultadoDiv.textContent = "🔍 Buscando aposta...";
+      const container = document.getElementById("apostaTexto");
+      container.textContent = "🔍 Buscando aposta...";
 
       db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
         const dados = snapshot.val();
         if (!dados) {
-          resultadoDiv.innerHTML = `❌ Aposta não encontrada para o código: ${codigo}`;
+          mostrarErro(`❌ Aposta não encontrada para o código: ${codigo}`);
           return;
         }
 
         let texto = "";
-        texto += `*** APOSTA MULTIJOGO ***\n`;
+        texto += `*** APOSTA MULTIJOGO ***\n\n`;
         texto += `Código: ${codigo}\n`;
         texto += `Data: ${dados.data ?? "N/A"}\n`;
         texto += `Horário: ${dados.horario ?? "N/A"}\n\n`;
@@ -147,19 +137,18 @@
 
         texto += "Obrigado por apostar conosco!";
 
-        document.getElementById("apostaTexto").textContent = texto;
+        container.textContent = texto;
+        container.classList.remove("erro");
+
       }).catch(err => {
-        document.getElementById("resultado").innerHTML = `<p style="color:red">⚠️ Erro ao buscar aposta: ${err.message}</p>`;
+        mostrarErro(`⚠️ Erro ao buscar aposta: ${err.message}`);
       });
     }
   </script>
 </head>
 <body>
-  <div class="container">
-    <h2>Detalhes da Aposta</h2>
-    <div id="resultado">
-      <pre id="apostaTexto">Aguardando código na URL...</pre>
-    </div>
+  <div class="container" id="apostaTexto">
+    Aguardando código da aposta na URL...
   </div>
 </body>
 </html>
