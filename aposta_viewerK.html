@@ -3,139 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visualizar e Imprimir Aposta</title>
-
+  <title>Visualizar Aposta - Multijogo</title>
   <style>
     body {
       background: #1f1c2c;
       color: #f0f0f0;
-      font-family: Arial, sans-serif;
-      padding: 10px;
+      font-family: "Courier New", Courier, monospace;
+      padding: 20px;
       text-align: center;
-      margin:0;
     }
     .container {
-      width: 100%;
-      max-width: 480px;
+      max-width: 400px;
       margin: auto;
       background-color: #2c2a3a;
-      padding: 15px 20px;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      padding: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
     h2 {
       color: #25d366;
-      margin-bottom: 20px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-    }
-    .resultado {
-      background-color: #1e1c2c;
-      padding: 15px;
-      border-radius: 10px;
-      text-align: left;
-      white-space: pre-wrap;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      min-height: 120px;
-      user-select: text;
-      box-shadow: inset 0 0 8px #25d366aa;
-    }
-    button {
-      margin-top: 15px;
-      background-color: #25d366;
-      color: white;
-      border: none;
-      padding: 12px 18px;
-      font-weight: 700;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(37, 211, 102, 0.6);
-      transition: background-color 0.3s ease;
-      width: 100%;
-    }
-    button:hover {
-      background-color: #1e9e58;
-    }
-    /* Modal simples */
-    #modalErro, #modalResumo {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right:0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      z-index: 10000;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    #modalErro > div, #modalResumo > div {
-      background: #2c2a3a;
-      padding: 25px 30px;
-      border-radius: 12px;
-      max-width: 400px;
-      width: 100%;
-      color: #eee;
-      position: relative;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.8);
-      text-align: left;
-      white-space: pre-wrap;
-      font-family: monospace;
-      font-size: 14px;
-    }
-    #modalErro span, #modalResumo span {
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      font-size: 24px;
-      font-weight: 900;
-      cursor: pointer;
-      color: #ff4c4c;
-      user-select: none;
-      transition: color 0.2s ease;
-    }
-    #modalErro span:hover, #modalResumo span:hover {
-      color: #ff0000;
-    }
-    #modalResumo h3 {
-      color: #25d366;
       margin-bottom: 15px;
-      font-weight: 700;
-      text-align: center;
-      white-space: normal;
-      font-family: Arial, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
-
-    /* Área de impressão - só fica visível na impressão */
-    #printable {
-      display: none;
+    pre {
+      text-align: left;
       white-space: pre-wrap;
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      line-height: 1.3;
-      color: black;
-      background: white;
+      font-size: 1rem;
+      background: #1e1c2c;
       padding: 10px;
-      margin: 0 auto;
-      max-width: 320px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      user-select: text;
+      box-shadow: inset 0 0 5px rgba(37, 211, 102, 0.3);
     }
-
+    /* Impressão otimizada para térmica */
     @media print {
-      body * {
-        visibility: hidden;
+      body {
+        background: #fff;
+        color: #000;
+        font-family: monospace;
       }
-      #printable, #printable * {
-        visibility: visible;
-      }
-      #printable {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%;
-        margin: 0;
-        padding: 10px;
+      .container {
         box-shadow: none;
-        background: white;
-        color: black;
+        background: none;
+        border-radius: 0;
+        padding: 0;
+        max-width: 100%;
+      }
+      pre {
+        background: none;
+        box-shadow: none;
+        padding: 0;
+        max-height: none;
       }
     }
   </style>
@@ -163,21 +84,10 @@
       if (codigo) {
         buscarApostaPorCodigo(codigo.trim());
       } else {
-        mostrarErro("❗ Código da aposta não informado na URL.");
+        document.getElementById("resultado").innerHTML =
+          "<p style='color:red'>❗ Código da aposta não informado na URL.</p>";
       }
     };
-
-    function mostrarErro(msg) {
-      const modal = document.getElementById("modalErro");
-      const p = document.getElementById("mensagemErro");
-      p.textContent = msg;
-      modal.style.display = "flex";
-    }
-    function fecharErro() {
-      document.getElementById("modalErro").style.display = "none";
-    }
-
-    let ultimaAposta = null; // Guarda a aposta para imprimir e enviar whatsapp
 
     function buscarApostaPorCodigo(codigo) {
       const resultadoDiv = document.getElementById("resultado");
@@ -186,121 +96,70 @@
       db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
         const dados = snapshot.val();
         if (!dados) {
-          resultadoDiv.textContent = `❌ Aposta não encontrada para o código: ${codigo}`;
+          resultadoDiv.innerHTML = `❌ Aposta não encontrada para o código: ${codigo}`;
           return;
         }
-        ultimaAposta = dados;
 
-        let texto = montarTextoCompletoAposta(codigo, dados);
-        resultadoDiv.textContent = texto;
+        let texto = "";
+        texto += `*** APOSTA MULTIJOGO ***\n`;
+        texto += `Código: ${codigo}\n`;
+        texto += `Data: ${dados.data ?? "N/A"}\n`;
+        texto += `Horário: ${dados.horario ?? "N/A"}\n\n`;
+        texto += `Total a Pagar: R$ ${Number(dados.totalPagar ?? 0).toFixed(2)}\n`;
+        texto += `Possível Retorno: R$ ${Number(dados.totalReceber ?? 0).toFixed(2)}\n\n`;
+        texto += `-- Detalhes das Apostas --\n\n`;
 
-        // Atualiza área de impressão também
-        document.getElementById("printable").textContent = texto;
+        const montarTextoTipo = (titulo, lista) => {
+          if (!lista || lista.length === 0) return "";
+          let str = `${titulo}:\n`;
+          lista.forEach(item => {
+            const numero = item.numero ?? item.numeros ?? "N/A";
+            const valor = item.valor != null ? `R$ ${Number(item.valor).toFixed(2)}` : "";
+            const posicao = item.posicao ? `(1º ao ${item.posicao}º)` : "";
+            str += `  ${numero} - ${valor} ${posicao}\n`;
+          });
+          str += `\n`;
+          return str;
+        };
+
+        const tiposSeparados = { milhar: [], centena: [], dezena: [], grupo: [] };
+        if (Array.isArray(dados.apostas)) {
+          dados.apostas.forEach(item => {
+            const tipo = item.tipo?.toLowerCase();
+            if (tiposSeparados[tipo]) {
+              tiposSeparados[tipo].push(item);
+            }
+          });
+        }
+
+        texto += montarTextoTipo("Milhar 5000", tiposSeparados.milhar);
+        texto += montarTextoTipo("Centena 600", tiposSeparados.centena);
+        texto += montarTextoTipo("Dezena 70", tiposSeparados.dezena);
+        texto += montarTextoTipo("Grupo 16", tiposSeparados.grupo);
+
+        if (Array.isArray(dados.duques) && dados.duques.length > 0) {
+          texto += "Duque de Dezenas 300:\n";
+          dados.duques.forEach(d => {
+            texto += `  ${d}\n`;
+          });
+          texto += "\n";
+        }
+
+        texto += "Obrigado por apostar conosco!";
+
+        document.getElementById("apostaTexto").textContent = texto;
       }).catch(err => {
-        mostrarErro("⚠️ Erro ao buscar aposta: " + err.message);
+        document.getElementById("resultado").innerHTML = `<p style="color:red">⚠️ Erro ao buscar aposta: ${err.message}</p>`;
       });
-    }
-
-    function montarTextoCompletoAposta(codigo, dados) {
-      const linhas = [];
-      linhas.push(`*** APOSTA MULTIJOGO ***`);
-      linhas.push(`Código: ${codigo}`);
-      if (dados.data) linhas.push(`Data: ${dados.data}`);
-      if (dados.horario) linhas.push(`Horário: ${dados.horario}`);
-      linhas.push("");
-      if (dados.totalPagar != null) linhas.push(`Total a Pagar: R$ ${Number(dados.totalPagar).toFixed(2)}`);
-      if (dados.totalReceber != null) linhas.push(`Possível Retorno: R$ ${Number(dados.totalReceber).toFixed(2)}`);
-      linhas.push("\n-- Detalhes das Apostas --\n");
-
-      const tiposSeparados = { milhar: [], centena: [], dezena: [], grupo: [] };
-
-      if (Array.isArray(dados.apostas)) {
-        dados.apostas.forEach(item => {
-          const tipo = item.tipo?.toLowerCase();
-          if (tiposSeparados[tipo]) tiposSeparados[tipo].push(item);
-        });
-      }
-
-      function montarLinhasTipo(titulo, arr) {
-        if (!arr || arr.length === 0) return [];
-        const res = [`${titulo}:`];
-        arr.forEach(item => {
-          const numero = item.numero ?? item.numeros ?? "N/A";
-          const valor = item.valor != null ? `R$ ${Number(item.valor).toFixed(2)}` : "";
-          const pos = item.posicao ? `(1º ao ${item.posicao}º)` : "";
-          res.push(`  ${numero} - ${valor} ${pos}`);
-        });
-        return res;
-      }
-
-      linhas.push(...montarLinhasTipo("Milhar 5000", tiposSeparados.milhar));
-      linhas.push("");
-      linhas.push(...montarLinhasTipo("Centena 600", tiposSeparados.centena));
-      linhas.push("");
-      linhas.push(...montarLinhasTipo("Dezena 70", tiposSeparados.dezena));
-      linhas.push("");
-      linhas.push(...montarLinhasTipo("Grupo 16", tiposSeparados.grupo));
-      linhas.push("");
-
-      if (Array.isArray(dados.duques) && dados.duques.length > 0) {
-        linhas.push("Duque de Dezenas 300:");
-        dados.duques.forEach(d => {
-          linhas.push(`  ${typeof d === 'string' ? d : JSON.stringify(d)}`);
-        });
-        linhas.push("");
-      }
-
-      linhas.push("Obrigado por apostar conosco!");
-      return linhas.join("\n");
-    }
-
-    function imprimirAposta() {
-      if (!ultimaAposta) {
-        mostrarErro("Nenhuma aposta carregada para imprimir.");
-        return;
-      }
-      window.print();
-    }
-
-    function enviarWhatsApp() {
-      if (!ultimaAposta) {
-        mostrarErro("Nenhuma aposta carregada para enviar.");
-        return;
-      }
-      const codigo = ultimaAposta.codigo || new Date().getTime();
-      const texto = document.getElementById("resultado").textContent;
-
-      // Codifica para URL
-      const textoEncoded = encodeURIComponent(texto);
-      const telefone = "5571992290058"; // Altere para seu número
-      const url = `https://wa.me/${telefone}?text=${textoEncoded}`;
-
-      window.open(url, "_blank");
     }
   </script>
 </head>
 <body>
-
   <div class="container">
     <h2>Detalhes da Aposta</h2>
-    <pre id="resultado" class="resultado">Aguardando código na URL...</pre>
-
-    <button onclick="imprimirAposta()">🖨️ Imprimir Aposta</button>
-    <button style="margin-top:8px; background:#128C7E;" onclick="enviarWhatsApp()">📲 Enviar WhatsApp</button>
-  </div>
-
-  <!-- Área para impressão (invisível na tela) -->
-  <pre id="printable"></pre>
-
-  <!-- Modal Erro -->
-  <div id="modalErro" style="display:none; align-items:center;">
-    <div>
-      <span onclick="fecharErro()">✖</span>
-      <h3>Erro</h3>
-      <p id="mensagemErro"></p>
-      <button onclick="fecharErro()">OK</button>
+    <div id="resultado">
+      <pre id="apostaTexto">Aguardando código na URL...</pre>
     </div>
   </div>
-
 </body>
 </html>
