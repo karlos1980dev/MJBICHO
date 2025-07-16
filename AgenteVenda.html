@@ -272,7 +272,7 @@
   const db = firebase.database();
 
     const valoresPremio = {
-      milhar: 5000, centena: 600, dezena: 70, grupo: 16, duque: 300
+      milhar: 5000, centena: 600, dezena: 60, grupo: 16, duque: 300
     };
 
     function adicionarCampos(tipo, qtd) {
@@ -392,7 +392,7 @@ function calcularTotal() {
       // Valor fixo por tipo (só soma uma vez por tipo)
       if (tipo === 'milhar') totalReceber += 5000;
       if (tipo === 'centena') totalReceber += 600;
-      if (tipo === 'dezena') totalReceber += 70;
+      if (tipo === 'dezena') totalReceber += 60;
       if (tipo === 'grupo') totalReceber += 16;
     }
   });
@@ -568,7 +568,7 @@ const dataHoje = new Date().toLocaleDateString("pt-BR");
   const titulos = {
     milhar: "Milhar 5000",
     centena: "Centena 600",
-    dezena: "Dezena 70",
+    dezena: "Dezena 60",
     grupo: "Grupo 16"
   };
 
