@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <link rel="shortcut icon" type="image/jpg" href="https://raw.githubusercontent.com/Savanty/AE/refs/heads/main/download.jpeg">
+
+
 <link rel="icon" href="https://raw.githubusercontent.com/Savanty/AE/refs/heads/main/download.jpeg" type="image/jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -490,10 +492,10 @@ const dataHoje = new Date().toLocaleDateString("pt-BR");
       return true;
     }
 
-    const ok1 = validarTipo("milhar", 4);
-    const ok2 = validarTipo("centena", 3);
-    const ok3 = validarTipo("dezena", 2);
-    const ok4 = validarTipo("grupo", 2, 25);
+    if (!validarTipo("milhar", 4)) return false;
+if (!validarTipo("centena", 3)) return false;
+if (!validarTipo("dezena", 2)) return false;
+if (!validarTipo("grupo", 2, 25)) return false;
 
     // Validar Duque
     const duques = document.querySelectorAll("#duqueContainer > div");
