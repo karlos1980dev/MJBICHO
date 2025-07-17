@@ -1,53 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visualizar Aposta - Multijogo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visualizar Aposta</title>
   <style>
     body {
       background: #1f1c2c;
       color: #f0f0f0;
       font-family: Arial, sans-serif;
-      padding: 20px;
+      padding: 10px;
       text-align: center;
     }
     .container {
-      max-width: 480px;
-      margin: 0 auto;
+      width: 100%;
+      margin: auto;
       background-color: #2c2a3a;
-      padding: 20px;
+      padding: 10px;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-      white-space: pre-wrap;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .resultado {
+      margin-top: 25px;
       text-align: left;
-      font-family: "Courier New", Courier, monospace;
-      font-size: 1rem;
-      line-height: 1.4;
-      user-select: text;
+      background-color: #1e1c2c;
+      padding: 15px;
+      border-radius: 10px;
     }
-    h2 {
+    h3, h4 {
       color: #25d366;
-      margin-bottom: 20px;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      text-shadow: 0 0 6px #25d366;
+      margin-bottom: 8px;
     }
-    .erro {
-      color: #ff4c4c;
-      font-weight: bold;
-      font-size: 1.1rem;
-      margin-top: 20px;
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 5px;
     }
   </style>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
   <script>
-    // Configuração Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
       authDomain: "multijogo.firebaseapp.com",
@@ -67,52 +62,43 @@
       if (codigo) {
         buscarApostaPorCodigo(codigo.trim());
       } else {
-        mostrarErro("❗ Código da aposta não informado na URL.");
+        document.getElementById("resultado").innerHTML =
+          "<p style='color:red'>❗ Código da aposta não informado na URL.</p>";
       }
     };
 
-    function mostrarErro(msg) {
-      const container = document.getElementById("apostaTexto");
-      if(container){
-        container.textContent = msg;
-        container.classList.add("erro");
-      }
-    }
-
     function buscarApostaPorCodigo(codigo) {
-      const container = document.getElementById("apostaTexto");
-      container.textContent = "🔍 Buscando aposta...";
+      const resultadoDiv = document.getElementById("resultado");
+      resultadoDiv.innerHTML = "🔍 Buscando aposta...";
 
-      db.ref(`apostas/${codigo}`).once("value").then(snapshot => {
+      db.ref(`apostas/${codigo}`).once("value").then((snapshot) => {
         const dados = snapshot.val();
         if (!dados) {
-          mostrarErro(`❌ Aposta não encontrada para o código: ${codigo}`);
+          resultadoDiv.innerHTML = `❌ Aposta não encontrada para o código: ${codigo}`;
           return;
         }
 
-        let texto = "";
-        texto += `*** APOSTA MULTIJOGO ***\n\n`;
-        texto += `Código: ${codigo}\n`;
-        texto += `Data: ${dados.data ?? "N/A"}\n`;
-        texto += `Horário: ${dados.horario ?? "N/A"}\n\n`;
-        texto += `Total a Pagar: R$ ${Number(dados.totalPagar ?? 0).toFixed(2)}\n`;
-        texto += `Possível Retorno: R$ ${Number(dados.totalReceber ?? 0).toFixed(2)}\n\n`;
-        texto += `-- Detalhes das Apostas --\n\n`;
+        let html = `<h3>🎫 Aposta: ${codigo}</h3>`;
 
-        const montarTextoTipo = (titulo, lista) => {
-          if (!lista || lista.length === 0) return "";
-          let str = `${titulo}:\n`;
-          lista.forEach(item => {
-            const numero = item.numero ?? item.numeros ?? "N/A";
-            const valor = item.valor != null ? `R$ ${Number(item.valor).toFixed(2)}` : "";
-            const posicao = item.posicao ? `(1º ao ${item.posicao}º)` : "";
-            str += `  ${numero} - ${valor} ${posicao}\n`;
-          });
-          str += `\n`;
-          return str;
+        if (dados.data)
+          html += `<p><strong>📅 Data:</strong> ${dados.data}</p>`;
+        if (dados.horario)
+          html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
+          if (dados.status)
+  html += `<p><strong>📌 Status:</strong> <span style="color:${dados.status === 'Ganhou' ? '#25d366' : '#ff4c4c'}">${dados.status}</span></p>`;
+        if (dados.valorUnico)
+          html += `<p><strong>🎲 Valor por Número:</strong> R$ ${Number(dados.valorUnico).toFixed(2)}</p>`;
+        if (dados.totalPagar != null)
+          html += `<p><strong>💰 Total a Pagar:</strong> R$ ${Number(dados.totalPagar).toFixed(2)}</p>`;
+
+        // 🔍 Separar por tipo
+        const tiposSeparados = {
+          milhar: [],
+          centena: [],
+          dezena: [],
+          grupo: []
         };
 
-        const tiposSeparados = { milhar: [], centena: [], dezena: [], grupo: [] };
         if (Array.isArray(dados.apostas)) {
           dados.apostas.forEach(item => {
             const tipo = item.tipo?.toLowerCase();
@@ -122,33 +108,46 @@
           });
         }
 
-        texto += montarTextoTipo("Milhar 5000", tiposSeparados.milhar);
-        texto += montarTextoTipo("Centena 600", tiposSeparados.centena);
-        texto += montarTextoTipo("Dezena 60", tiposSeparados.dezena);
-        texto += montarTextoTipo("Grupo 16", tiposSeparados.grupo);
-
-        if (Array.isArray(dados.duques) && dados.duques.length > 0) {
-          texto += "Duque de Dezenas 300:\n";
-          dados.duques.forEach(d => {
-            texto += `  ${d}\n`;
+        function renderTipo(titulo, arr) {
+          if (!arr || arr.length === 0) return "";
+          let tipoHtml = `<h4>${titulo}</h4><ul>`;
+          arr.forEach((item) => {
+            const numero = item.numero ?? item.numeros ?? "N/A";
+            const valor = item.valor != null ? `R$ ${Number(item.valor).toFixed(2)}` : "";
+            const posicao = item.posicao ? `(1º ao ${item.posicao}º)` : "";
+            tipoHtml += `<li>${numero} - ${valor} ${posicao}</li>`;
           });
-          texto += "\n";
+          tipoHtml += `</ul>`;
+          return tipoHtml;
         }
 
-        texto += "Obrigado por apostar conosco!";
+        html += renderTipo("🐎 Milhar", tiposSeparados.milhar);
+        html += renderTipo("🎯 Centena", tiposSeparados.centena);
+        html += renderTipo("🔢 Dezena", tiposSeparados.dezena);
+        html += renderTipo("🐘 Grupo", tiposSeparados.grupo);
 
-        container.textContent = texto;
-        container.classList.remove("erro");
+        // Duques
+        if (Array.isArray(dados.duques) && dados.duques.length > 0) {
+          html += `<h4>💥 Duque de Dezenas</h4><ul>`;
+          dados.duques.forEach((d) => {
+            const numeros = d.numeros ?? "??-??";
+            const valor = d.valor != null ? `R$ ${Number(d.valor).toFixed(2)}` : "";
+            html += `<li>${numeros} - ${valor}</li>`;
+          });
+          html += `</ul>`;
+        }
 
-      }).catch(err => {
-        mostrarErro(`⚠️ Erro ao buscar aposta: ${err.message}`);
+        resultadoDiv.innerHTML = html;
+      }).catch((err) => {
+        resultadoDiv.innerHTML = `<p style="color:red">⚠️ Erro ao buscar aposta: ${err.message}</p>`;
       });
     }
   </script>
 </head>
 <body>
-  <div class="container" id="apostaTexto">
-    Aguardando código da aposta na URL...
+  <div class="container">
+    <h2>📄 Detalhes da Aposta</h2>
+    <div id="resultado" class="resultado"></div>
   </div>
 </body>
 </html>
