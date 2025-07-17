@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editor de Status</title>
+  <style>
+    body {
+      background: #1f1c2c;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .box {
+      background: #2c2a3a;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+    }
+    input, select, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #25d366;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1ebc58;
+    }
+    .mensagem {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlWGPUuGyugzvvQt_Wd5GI3IBFH90hUgQ",
+      authDomain: "multijogo.firebaseapp.com",
+      databaseURL: "https://multijogo-default-rtdb.firebaseio.com",
+      projectId: "multijogo",
+      storageBucket: "multijogo.appspot.com",
+      messagingSenderId: "328198585423",
+      appId: "1:328198585423:web:ae370bf8e7716ec2f17e3a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function atualizarStatus() {
+      const codigo = document.getElementById("codigo").value.trim();
+      const status = document.getElementById("status").value;
+      const mensagem = document.getElementById("mensagem");
+
+      if (!codigo) {
+        mensagem.innerHTML = "❗ Digite o código da aposta.";
+        mensagem.style.color = "orange";
+        return;
+      }
+
+      db.ref(`apostas/${codigo}`).once("value").then((snap) => {
+        if (!snap.exists()) {
+          mensagem.innerHTML = "❌ Código não encontrado.";
+          mensagem.style.color = "red";
+        } else {
+          db.ref(`apostas/${codigo}`).update({ status })
+            .then(() => {
+              mensagem.innerHTML = `✅ Status atualizado para: <b>${status}</b>`;
+              mensagem.style.color = "#25d366";
+            })
+            .catch((err) => {
+              mensagem.innerHTML = "⚠️ Erro ao atualizar.";
+              mensagem.style.color = "red";
+              console.error(err);
+            });
+        }
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="box">
+    <h2>✏️ Alterar Status da Aposta</h2>
+    <input type="text" id="codigo" placeholder="Digite o código da aposta" />
+    <select id="status">
+      <option value="Ganhou">✅ Ganhou</option>
+      <option value="Perdeu">❌ Perdeu</option>
+    </select>
+    <button onclick="atualizarStatus()">Salvar Status</button>
+    <div id="mensagem" class="mensagem"></div>
+  </div>
+</body>
+</html>
