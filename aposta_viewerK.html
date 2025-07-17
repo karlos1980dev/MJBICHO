@@ -84,8 +84,12 @@
           html += `<p><strong>📅 Data:</strong> ${dados.data}</p>`;
         if (dados.horario)
           html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
-          if (dados.status)
-  html += `<p><strong>📌 Status:</strong> <span style="color:${dados.status === 'Ganhou' ? '#25d366' : '#ff4c4c'}">${dados.status}</span></p>`;
+          const status = dados.status || dados.Status;
+
+if (status) {
+  const corStatus = status === 'Ganhou' ? '#25d366' : '#ff4c4c';
+  html += `<p><strong>📌 Status:</strong> <span style="color:${corStatus}">${status}</span></p>`;
+}
         if (dados.valorUnico)
           html += `<p><strong>🎲 Valor por Número:</strong> R$ ${Number(dados.valorUnico).toFixed(2)}</p>`;
         if (dados.totalPagar != null)
