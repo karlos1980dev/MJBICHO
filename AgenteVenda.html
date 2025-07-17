@@ -607,19 +607,20 @@ if (!validarTipo("grupo", 2, 25)) return false;
   
 
   dadosParaSalvar = {
+  codigo,
+  firebaseData: {
     codigo,
-    firebaseData: {
-      codigo,
-      horario,
-      valorUnico,
-      totalPagar,
-      timestamp: Date.now(),
-      data: dataHoje,
-      apostas,
-      duques
-    },
-    textoWhatsApp
-  };
+    horario,
+    valorUnico,
+    totalPagar,
+    timestamp: Date.now(),
+    data: dataHoje,
+    apostas,
+    duques,
+    status: "pendente" // ou "aguardando", valor inicial
+  },
+  textoWhatsApp
+};
 }
     window.onload = () => {
   adicionarCampos("milhar", 3);
@@ -673,6 +674,7 @@ function confirmarEnvio() {
 
   fecharResumo();
   window.open(`https://wa.me/5571992290058?text=*Código da aposta:* ${codigo}`, "_blank");
+  
 }
 function verificarSePodeEnviar() {
   const valor = parseFloat(document.getElementById("valorUnico").value) || 0;
