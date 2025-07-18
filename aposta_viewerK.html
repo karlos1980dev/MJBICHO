@@ -84,12 +84,13 @@
           html += `<p><strong>📅 Data:</strong> ${dados.data}</p>`;
         if (dados.horario)
           html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
-          const status = dados.status || dados.Status;
+          
+let corStatus = "#ccc"; // cor padrão
+if (status.toLowerCase() === "ganhou") corStatus = "#25d366"; // verde
+else if (status.toLowerCase() === "perdeu") corStatus = "#ff4c4c"; // vermelho
+else if (status.toLowerCase() === "pendente" || status.toLowerCase() === "pendência") corStatus = "#ffc107"; // amarelo
 
-if (status) {
-  const corStatus = status === 'Ganhou' ? '#25d366' : '#ff4c4c';
-  html += `<p><strong>📌 Status:</strong> <span style="color:${corStatus}">${status}</span></p>`;
-}
+html += `<p><strong>📌 Status:</strong> <span style="color:${corStatus}">${status}</span></p>`;
         if (dados.valorUnico)
           html += `<p><strong>🎲 Valor por Número:</strong> R$ ${Number(dados.valorUnico).toFixed(2)}</p>`;
         if (dados.totalPagar != null)
