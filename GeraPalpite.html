@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Palpite Jogo do Bicho</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,6 +29,24 @@
       margin-top: 20px;
       font-size: 18px;
     }
+    #imagemBicho {
+      margin-top: 20px;
+      width: 150px;
+      height: 150px;
+      object-fit: contain;
+      display: none;
+    }
+    .whatsapp-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background-color: #25D366;
+      color: #fff;
+    }
+    .whatsapp-btn img {
+      width: 22px;
+      height: 22px;
+    }
   </style>
 </head>
 <body>
@@ -37,18 +54,22 @@
 
   <label for="hora">Selecione o horário:</label>
   <select id="hora">
-    <option value="10">10:00 Horas </option>
-    <option value="12">12:00 Horas</option>
-    <option value="15">15:00 Horas</option>
-    <option value="19">19:00 Horas</option>
-    <option value="21">21:00 horas</option>
+    <option value="10:00 Horas">10:00 Horas</option>
+    <option value="12:00 Horas">12:00 Horas</option>
+    <option value="15:00 Horas">15:00 Horas</option>
+    <option value="19:00 Horas">19:00 Horas</option>
+    <option value="21:00 Horas">21:00 Horas</option>
   </select>
 
   <br><br>
   <button onclick="gerarPalpite()">Gerar Palpite</button>
-  <button onclick="compartilhar()">Compartilhar</button>
+  <button class="whatsapp-btn" onclick="compartilhar()">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    Compartilhar
+  </button>
 
   <div class="palpite" id="resultado"></div>
+  <img id="imagemBicho" src="" alt="Imagem do Bicho" />
 
   <script>
     const grupos = [
@@ -87,37 +108,16 @@
       "Vaca": ["97", "98", "99", "00"]
     };
 
-    function gerarPalpite() {
-      const hora = document.getElementById("hora").value;
+    const imagensGrupo = {
+      "Cobra": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Cobra-preta.jpg/240px-Cobra-preta.jpg",
+      "Leão": "https://upload.wikimedia.org/wikipedia/commons/7/73/Lion_waiting_in_Namibia.jpg",
+      "Elefante": "https://upload.wikimedia.org/wikipedia/commons/3/37/African_Bush_Elephant.jpg",
+      "Jacaré": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Caiman_crocodilus_Tropicario.jpg",
+      "Galo": "https://upload.wikimedia.org/wikipedia/commons/9/94/Rooster_portrait2.jpg"
+      // Adicione os outros grupos com URLs reais conforme quiser
+    };
 
-      // Sorteia o grupo principal
-      const grupo = grupos[Math.floor(Math.random() * grupos.length)];
-
-      // Dezena compatível com o grupo
-      const dezenasDoGrupo = dezenasGrupo[grupo];
-      const dezena = dezenasDoGrupo[Math.floor(Math.random() * dezenasDoGrupo.length)];
-
-      // Centena (1 dígito + dezena)
-      const centena = gerarNumero(1) + dezena;
-
-      // Milhar (1 dígito + centena)
-      const milhar = gerarNumero(1) + centena;
-
-      // Duque de dezenas aleatórias
-      const duque1 = gerarNumero(2);
-      const duque2 = gerarNumero(2);
-
-      const resultado = `
-        <strong>🕒 Horário:</strong> ${hora}h<br>
-        🔢 <strong>Milhar:</strong> ${milhar}<br>
-        🔢 <strong>Centena:</strong> ${centena}<br>
-        🔢 <strong>Dezena:</strong> ${dezena}<br>
-        🐾 <strong>Grupo:</strong> ${grupo}<br>
-        🐾 <strong>Duque:</strong> ${duque1} e ${duque2}<br>
-      `;
-
-      document.getElementById("resultado").innerHTML = resultado;
-    }
+    let grupoSelecionado = "";
 
     function gerarNumero(digitos) {
       let num = Math.floor(Math.random() * Math.pow(10, digitos)).toString();
@@ -125,9 +125,36 @@
       return num;
     }
 
+    function gerarPalpite() {
+      const hora = document.getElementById("hora").value;
+
+      grupoSelecionado = grupos[Math.floor(Math.random() * grupos.length)];
+      const dezenasDoGrupo = dezenasGrupo[grupoSelecionado];
+      const dezena = dezenasDoGrupo[Math.floor(Math.random() * dezenasDoGrupo.length)];
+      const centena = gerarNumero(1) + dezena;
+      const milhar = gerarNumero(1) + centena;
+      const duque1 = gerarNumero(2);
+      const duque2 = gerarNumero(2);
+
+      const resultado = `
+        <strong>🕒 Horário:</strong> ${hora}<br>
+        🔢 <strong>Milhar:</strong> ${milhar}<br>
+        🔢 <strong>Centena:</strong> ${centena}<br>
+        🔢 <strong>Dezena:</strong> ${dezena}<br>
+        🐾 <strong>Grupo:</strong> ${grupoSelecionado}<br>
+        🐾 <strong>Duque:</strong> ${duque1} e ${duque2}<br>
+      `;
+
+      document.getElementById("resultado").innerHTML = resultado;
+
+      const img = document.getElementById("imagemBicho");
+      img.src = imagensGrupo[grupoSelecionado] || "";
+      img.style.display = img.src ? "block" : "none";
+    }
+
     function compartilhar() {
       const content = document.getElementById("resultado").innerText;
-      const url = `https://wa.me/?text=${encodeURIComponent("Palpite do Jogo do Bicho:\n" + content)}`;
+      const url = `https://wa.me/?text=${encodeURIComponent("📢 Palpite do Jogo do Bicho:\n" + content)}`;
       window.open(url, '_blank');
     }
   </script>
