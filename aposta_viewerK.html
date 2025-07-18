@@ -85,12 +85,15 @@
         if (dados.horario)
           html += `<p><strong>🕒 Horário:</strong> ${dados.horario}</p>`;
           
-let corStatus = "#ccc"; // cor padrão
+let status = dados.status || dados.Status || "Pendente"; // se não tiver status, assume "Pendente"
+let corStatus = "#ccc"; // cinza padrão
+
 if (status.toLowerCase() === "ganhou") corStatus = "#25d366"; // verde
 else if (status.toLowerCase() === "perdeu") corStatus = "#ff4c4c"; // vermelho
 else if (status.toLowerCase() === "pendente" || status.toLowerCase() === "pendência") corStatus = "#ffc107"; // amarelo
 
 html += `<p><strong>📌 Status:</strong> <span style="color:${corStatus}">${status}</span></p>`;
+
         if (dados.valorUnico)
           html += `<p><strong>🎲 Valor por Número:</strong> R$ ${Number(dados.valorUnico).toFixed(2)}</p>`;
         if (dados.totalPagar != null)
