@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palpites</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 10px;
+    }
+    .duelo {
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .imagens {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+      margin-left: 10px;
+    }
+    .imagens img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .vs {
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .palpite {
+      background: white;
+      border-radius: 10px;
+      background:grey;
+      color:white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin: 8px auto;
+      max-width: 400px;
+      max-height:120px;
+      text-align: center;
+      padding: 15px;
+    }
+
+     .times {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+      margin-left: 10px;
+    }
+
+    .times img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .horario {
+      font-size: 14px;
+      color: #555;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background: #25d366;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #1ebe5c;
+    }
+    b{
+        margin-left:150px;
+    }
+  </style>
+</head>
+<body>
+<h2>PALPITE DIARIO </br> <b> MULTIPLAY</MULTIPLAY></b></h2>
+  <div id="palpites"></div>
+  <button onclick="enviarWhatsApp()">📤 Enviar via WhatsApp</button>
+
+  <script>
+    const ladoA = [
+      "Newcastle", "Tottenham", "West Ham", "Aston Villa", "Wolves"
+    ];
+    const ladoAImagens = [
+      "https://raw.githubusercontent.com/Savanty/AE/main/Newcastle.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/Gremio.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/Santos.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/AstonVilla.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/Wolves.jpeg"
+    ];
+    const ladoB = [
+      "Everton", "Bournemouth", "Brighton", "Leeds", "Nottingham"
+    ];
+    const ladoBImagens = [
+      "https://raw.githubusercontent.com/Savanty/AE/main/Everton.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/Bournemouth.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/Brighton.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/Leeds.jpeg",
+      "https://raw.githubusercontent.com/Savanty/AE/main/Nottingham.jpeg"
+    ];
+    const horarios = [
+      "2025-07-26T13:00",
+      "2025-07-26T15:00",
+      "2025-07-26T17:00",
+      "2025-07-26T19:00",
+      "2025-07-26T21:00"
+    ];
+
+    const opcoesPalpite = ["Casa", "Fora", "Empate", "Ambas", "+2 Gols", "-2 Gols", "Casa/Fora", "Casa/Empate", "Fora/Empate"];
+    const palpitesGerados = [];
+
+    function formatarHorario(dataISO) {
+      const d = new Date(dataISO);
+      return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", {hour: '2-digit', minute: '2-digit'});
+    }
+
+    function gerarPalpites() {
+      const container = document.getElementById("palpites");
+      container.innerHTML = "";
+
+      for (let i = 0; i < ladoA.length; i++) {
+        const duelo = document.createElement("div");
+        duelo.className = "duelo";
+
+        const palpite = opcoesPalpite[Math.floor(Math.random() * opcoesPalpite.length)];
+        palpitesGerados.push({
+          timeA: ladoA[i],
+          timeB: ladoB[i],
+          horario: horarios[i],
+          palpite: palpite
+        });
+
+        duelo.innerHTML = `
+          <div class="imagens">
+            <img src="${ladoAImagens[i]}" alt="${ladoA[i]}">
+            <div class="vs">x</div>
+            <img src="${ladoBImagens[i]}" alt="${ladoB[i]}">
+          </div>
+          <div class="vs">${ladoA[i]} x ${ladoB[i]}</div>
+          <div class="horario">${formatarHorario(horarios[i])}</div>
+          <div class="palpite">Palpite: ${palpite}</div>
+        `;
+
+        container.appendChild(duelo);
+      }
+    }
+
+    function enviarWhatsApp() {
+      let mensagem = `🎯 *Palpite Certo Multiplay:*\n\n`;
+
+      palpitesGerados.forEach(p => {
+        mensagem += `📌 *${p.timeA}  x  ${p.timeB}*\n`;
+        mensagem += `🕒 ${formatarHorario(p.horario)}\n`;
+        mensagem += `💡 Palpite: *${p.palpite}*\n\n`;
+      });
+
+      const textoFinal = encodeURIComponent(mensagem);
+      window.open(`https://wa.me/?text=${textoFinal}`, '_blank');
+    }
+
+    gerarPalpites();
+  </script>
+
+</body>
+</html>
