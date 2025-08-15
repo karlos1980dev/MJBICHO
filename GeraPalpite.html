@@ -122,6 +122,36 @@
     return num;
   }
 
+  function embaralhar(array) {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
+  function gerarCruzNumeros() {
+    let n1 = Math.floor(Math.random() * 10);
+    let n2 = Math.floor(Math.random() * 10);
+    let n3 = Math.floor(Math.random() * 10);
+    let n4 = Math.floor(Math.random() * 10);
+
+    let cruzVisual = `
+        &nbsp;&nbsp;${n2}<br>
+        ${n1}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${n3}<br>
+        &nbsp;&nbsp;${n4}
+    `;
+
+    let base = [n1, n2, n3, n4];
+
+    let milhar = [];
+    for (let i = 0; i < 10; i++) milhar.push(embaralhar([...base]).join(""));
+
+    let centena = [];
+    for (let i = 0; i < 10; i++) centena.push(embaralhar([...base]).slice(0, 3).join(""));
+
+    let dezena = [];
+    for (let i = 0; i < 10; i++) dezena.push(embaralhar([...base]).slice(0, 2).join(""));
+
+    return { cruzVisual, milhar, centena, dezena };
+  }
+
   function gerarPalpite() {
     const hora = document.getElementById("hora").value;
     const grupo = grupos[Math.floor(Math.random() * grupos.length)];
@@ -132,13 +162,21 @@
     const duque1 = gerarNumero(2);
     const duque2 = gerarNumero(2);
 
+    let cruzData = gerarCruzNumeros();
+
     const resultado = `
       <strong>🕒 Horário:</strong> ${hora}<br>
       🔢 <strong>Milhar:</strong> ${milhar}<br>
       🔢 <strong>Centena:</strong> ${centena}<br>
       🔢 <strong>Dezena:</strong> ${dezena}<br>
       🐾 <strong>Grupo:</strong> ${grupo}<br>
-      🐾 <strong>Duque:</strong> ${duque1} e ${duque2}<br>
+      🐾 <strong>Duque:</strong> ${duque1} e ${duque2}<br><br>
+
+      <strong>🎯 Cruz do Dia:</strong><br>
+      <pre style="font-size:20px;">${cruzData.cruzVisual}</pre>
+      <strong>Milhar : </strong> ${cruzData.milhar.join(", ")}<br><b>
+      <strong>Centena : </strong> ${cruzData.centena.join(", ")}<br><br>
+      <strong>Dezena (10 comb.):</strong> ${cruzData.dezena.join(", ")}
     `;
 
     document.getElementById("resultado").innerHTML = resultado;
@@ -149,8 +187,7 @@
   }
 
   const linlk = "https://mjbicho.netlify.app/agentevenda";
-
-const aposta ="\n*APSOTA DISPONIVEL*\n\n *MILHAR*        5.000\n *CENTENA*    600.00\n *DEZENA*       60.00\n *GRUPO*         16.00\n *DUQUE DEZENA*    300.00\n\n"
+  const aposta = "\n*APSOTA DISPONIVEL*\n\n *MILHAR*        5.000\n *CENTENA*    600.00\n *DEZENA*       60.00\n *GRUPO*         16.00\n *DUQUE DEZENA*    300.00\n\n";
 
   function compartilhar() {
     const content = document.getElementById("resultado").innerText;
@@ -180,12 +217,10 @@ const aposta ="\n*APSOTA DISPONIVEL*\n\n *MILHAR*        5.000\n *CENTENA*    60
     if (proximo) proximo.selected = true;
   }
 
-  // Ao carregar e a cada minuto
   window.onload = () => {
     atualizarHorarios();
     setInterval(atualizarHorarios, 60000);
   };
-  
 </script>
 </body>
 </html>
